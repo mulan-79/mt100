@@ -1,20 +1,26 @@
-/** 장비 쇼케이스용 카테고리 */
-export const gearCategories = [
-  { id: 'footwear', label: '등산화' },
-  { id: 'clothing', label: '의류' },
-  { id: 'backpack', label: '배낭' },
-  { id: 'other', label: '기타' },
-]
+/** Firestore `category` 값과 탭 id (한글) */
+export const GEAR_FIRESTORE_CATEGORIES = ['등산화', '배낭', '의류', '기타']
 
-/**
- * category: gearCategories.id 와 동일
- */
-export const gearItems = [
+export const gearCategories = GEAR_FIRESTORE_CATEGORIES.map((id) => ({
+  id,
+  label: id,
+}))
+
+const legacyToKo = {
+  footwear: '등산화',
+  backpack: '배낭',
+  clothing: '의류',
+  other: '기타',
+}
+
+/** Firebase 미설정 시 샘플 카드 (기존 시드) */
+const legacyGearItems = [
   {
     id: 'g-boot-1',
     category: 'footwear',
     name: '미드컷 고어텍스 등산화',
-    summary: '방수·투습 멤브레인과 비브람 솔로 젖은 바위에서도 미끄럼을 줄입니다.',
+    summary:
+      '방수·투습 멤브레인과 비브람 솔로 젖은 바위에서도 미끄럼을 줄입니다.',
   },
   {
     id: 'g-boot-2',
@@ -32,7 +38,8 @@ export const gearItems = [
     id: 'g-cloth-1',
     category: 'clothing',
     name: '소프트쉘 재킷',
-    summary: '바람을 막고 활동량에 맞춰 신축되는 레이어로 봄·가을에 적합합니다.',
+    summary:
+      '바람을 막고 활동량에 맞춰 신축되는 레이어로 봄·가을에 적합합니다.',
   },
   {
     id: 'g-cloth-2',
@@ -68,7 +75,8 @@ export const gearItems = [
     id: 'g-other-1',
     category: 'other',
     name: '카본 트레킹 폴',
-    summary: '내리막 무릎 부담을 줄이고, 길이 조절로 지형에 맞춰 사용할 수 있습니다.',
+    summary:
+      '내리막 무릎 부담을 줄이고, 길이 조절로 지형에 맞춰 사용할 수 있습니다.',
   },
   {
     id: 'g-other-2',
@@ -80,6 +88,27 @@ export const gearItems = [
     id: 'g-other-3',
     category: 'other',
     name: '보온 스테인리스 보틀',
-    summary: '겨울 산행 시 뜨거운 음료를 오래 유지하고, 뚜껑 잠금으로 흘림을 방지합니다.',
+    summary:
+      '겨울 산행 시 뜨거운 음료를 오래 유지하고, 뚜껑 잠금으로 흘림을 방지합니다.',
   },
 ]
+
+/**
+ * @returns {Array<{ id: string, name: string, category: string, description: string, imageUrl: string, author: string, createdAt: null, isSample: true }>}
+ */
+export function getStaticGearFallback() {
+  return legacyGearItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    category: legacyToKo[item.category],
+    description: item.summary,
+    imageUrl: '',
+    author: '',
+    createdAt: null,
+    isSample: true,
+  }))
+}
+
+export function isValidGearCategory(value) {
+  return GEAR_FIRESTORE_CATEGORIES.includes(value)
+}

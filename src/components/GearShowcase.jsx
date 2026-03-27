@@ -1,21 +1,105 @@
-import { useMemo, useState } from 'react'
-import { Backpack, Footprints, Package, Shirt } from 'lucide-react'
-import { gearCategories, gearItems } from '../data/gear'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Backpack,
+  Footprints,
+  ImageOff,
+  Package,
+  PencilLine,
+  Plus,
+  Shirt,
+  Trash2,
+} from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { gearCategories, getStaticGearFallback } from '../data/gear'
+import { isFirebaseConfigured, journalAuthorLabelForEmail } from '../firebase/config'
+import { deleteGear, subscribeGears } from '../firebase/gearsFirestore'
+import { GearFormModal } from './GearFormModal'
 
 const categoryIcon = {
-  footwear: Footprints,
-  clothing: Shirt,
-  backpack: Backpack,
-  other: Package,
+  등산화: Footprints,
+  배낭: Backpack,
+  의류: Shirt,
+  기타: Package,
+}
+
+function authorCaption(email) {
+  if (!email) return null
+  const label = journalAuthorLabelForEmail(email)
+  return label ? `${label} · ${email}` : email
 }
 
 export function GearShowcase() {
+  const { isAuthorized } = useAuth()
   const [active, setActive] = useState(gearCategories[0].id)
+  const [remoteGears, setRemoteGears] = useState([])
+  const [loadError, setLoadError] = useState(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingGear, setEditingGear] = useState(null)
+
+  const firebaseOn = isFirebaseConfigured()
+  const [gearsReady, setGearsReady] = useState(() => !firebaseOn)
+  const loading = firebaseOn && !gearsReady
+
+  useEffect(() => {
+    if (!firebaseOn) return undefined
+
+    let cancelled = false
+    const unsub = subscribeGears(
+      (list) => {
+        if (cancelled) return
+        setLoadError(null)
+        setRemoteGears(list)
+        setGearsReady(true)
+      },
+      (err) => {
+        if (cancelled) return
+        console.error('[gears]', err)
+        setLoadError(err?.message ?? String(err))
+        setRemoteGears([])
+        setGearsReady(true)
+      },
+    )
+    return () => {
+      cancelled = true
+      unsub()
+    }
+  }, [firebaseOn])
+
+  const gears = useMemo(() => {
+    if (!firebaseOn) return getStaticGearFallback()
+    return remoteGears
+  }, [firebaseOn, remoteGears])
 
   const filtered = useMemo(
-    () => gearItems.filter((item) => item.category === active),
-    [active],
+    () => gears.filter((item) => item.category === active),
+    [gears, active],
   )
+
+  const openAdd = () => {
+    setEditingGear(null)
+    setFormOpen(true)
+  }
+
+  const openEdit = (item) => {
+    if (item.isSample) return
+    setEditingGear(item)
+    setFormOpen(true)
+  }
+
+  const closeForm = () => {
+    setFormOpen(false)
+    setEditingGear(null)
+  }
+
+  const handleDelete = async (item) => {
+    if (item.isSample) return
+    if (!window.confirm(`「${item.name}」장비를 삭제할까요?`)) return
+    try {
+      await deleteGear(item.id)
+    } catch (e) {
+      window.alert(e?.message ?? String(e))
+    }
+  }
 
   const tabId = (catId) => `gear-tab-${catId}`
   const panelId = 'gear-panel'
@@ -26,21 +110,47 @@ export function GearShowcase() {
       className="scroll-mt-20 border-b border-forest-200 bg-gradient-to-b from-forest-50 to-earth-100/40 py-16 sm:py-20"
       aria-labelledby="gear-heading"
     >
+      <GearFormModal
+        open={formOpen}
+        onClose={closeForm}
+        editingGear={editingGear}
+      />
+
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-8 max-w-2xl">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-forest-600">
-            Gear
-          </p>
-          <h2
-            id="gear-heading"
-            className="text-3xl font-bold tracking-tight text-forest-900 sm:text-4xl"
-          >
-            장비 소개
-          </h2>
-          <p className="mt-3 text-base leading-relaxed text-forest-800/85">
-            코스와 계절에 맞춰 고른 추천 장비입니다. 탭을 바꿔 카테고리별로
-            살펴보세요.
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-forest-600">
+              Gear
+            </p>
+            <h2
+              id="gear-heading"
+              className="text-3xl font-bold tracking-tight text-forest-900 sm:text-4xl"
+            >
+              장비 소개
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-forest-800/85">
+              코스와 계절에 맞춰 고른 추천 장비입니다. 탭으로 카테고리를 바꿔 보세요.
+              {firebaseOn
+                ? ' 권한이 있는 멤버가 직접 장비를 추가·수정할 수 있습니다.'
+                : ' Firebase에 연결되면 팀이 장비를 등록·관리할 수 있습니다.'}
+            </p>
+            {loadError && firebaseOn ? (
+              <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                장비 목록을 불러오지 못했습니다. ({loadError})
+              </p>
+            ) : null}
+          </div>
+
+          {isAuthorized && firebaseOn ? (
+            <button
+              type="button"
+              onClick={openAdd}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-forest-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-700"
+            >
+              <Plus className="size-4" aria-hidden />
+              장비 추가하기
+            </button>
+          ) : null}
         </div>
 
         <div
@@ -75,26 +185,78 @@ export function GearShowcase() {
           })}
         </div>
 
-        <div
-          id={panelId}
-          role="tabpanel"
-          aria-labelledby={tabId(active)}
-        >
-          {filtered.length === 0 ? (
+        <div id={panelId} role="tabpanel" aria-labelledby={tabId(active)}>
+          {loading && firebaseOn ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-forest-200 bg-white/60 py-16">
+              <div
+                className="size-10 animate-spin rounded-full border-2 border-forest-200 border-t-forest-600"
+                aria-hidden
+              />
+              <p className="text-sm font-medium text-forest-700">
+                장비 목록을 불러오는 중…
+              </p>
+            </div>
+          ) : filtered.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-forest-300 bg-white/60 px-6 py-12 text-center text-forest-700">
               이 카테고리에 등록된 장비가 없습니다.
             </p>
           ) : (
-            <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((item) => (
                 <li key={item.id}>
-                  <article className="flex h-full flex-col rounded-2xl border border-forest-200 bg-white/85 p-5 shadow-sm transition hover:border-earth-300/80 hover:shadow-md">
-                    <h3 className="text-lg font-semibold tracking-tight text-forest-900">
-                      {item.name}
-                    </h3>
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-forest-800/90">
-                      {item.summary}
-                    </p>
+                  <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-white/90 shadow-sm transition hover:border-earth-300/80 hover:shadow-md">
+                    <div className="relative aspect-[4/3] w-full shrink-0 bg-forest-100">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt=""
+                          className="absolute inset-0 h-full w-full object-cover object-center"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-forest-500">
+                          <ImageOff className="size-10 opacity-60" aria-hidden />
+                          <span className="text-xs font-medium">샘플 · 이미지 없음</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-lg font-semibold tracking-tight text-forest-900">
+                        {item.name}
+                      </h3>
+                      <p className="mt-3 flex-1 text-sm leading-relaxed text-forest-800/90">
+                        {item.description}
+                      </p>
+                      {item.author ? (
+                        <p className="mt-3 text-xs text-forest-500">
+                          추천: {authorCaption(item.author)}
+                        </p>
+                      ) : item.isSample ? (
+                        <p className="mt-3 text-xs text-forest-400">샘플 데이터</p>
+                      ) : null}
+
+                      {isAuthorized && firebaseOn && !item.isSample ? (
+                        <div className="mt-4 flex flex-wrap gap-2 border-t border-forest-100 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(item)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-forest-200 bg-white px-3 py-1.5 text-xs font-semibold text-forest-800 transition hover:bg-forest-50"
+                          >
+                            <PencilLine className="size-3.5" aria-hidden />
+                            수정
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-800 transition hover:bg-red-50"
+                          >
+                            <Trash2 className="size-3.5" aria-hidden />
+                            삭제
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
                   </article>
                 </li>
               ))}

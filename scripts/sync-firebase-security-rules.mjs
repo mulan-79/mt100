@@ -62,6 +62,47 @@ service cloud.firestore {
         && request.resource.data.imageUrl.size() > 0;
       allow update, delete: if false;
     }
+
+    // 장비 소개 CMS: gears (authorizedUsers.json 동기화)
+    match /gears/{gearId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ${emailsInClause}
+        && request.resource.data.keys().hasOnly(['name', 'category', 'description', 'imageUrl', 'author', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.category is string
+        && request.resource.data.category in ['등산화', '배낭', '의류', '기타']
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 20000
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() > 0
+        && request.resource.data.author is string
+        && request.resource.data.author.lower() == request.auth.token.email.lower()
+        && request.resource.data.createdAt is timestamp;
+      allow update: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ${emailsInClause}
+        && request.resource.data.keys().hasOnly(['name', 'category', 'description', 'imageUrl', 'author', 'createdAt'])
+        && request.resource.data.author == resource.data.author
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.category is string
+        && request.resource.data.category in ['등산화', '배낭', '의류', '기타']
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 20000
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() > 0;
+      allow delete: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ${emailsInClause};
+    }
   }
 }
 `
@@ -71,6 +112,14 @@ service firebase.storage {
   match /b/{bucket}/o {
     // journalPostsFirestore.js 경로: journal-images/{uid}/...
     match /journal-images/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ${emailsInClause};
+    }
+
+    match /gear-images/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null
         && request.auth.uid == userId
