@@ -1,8 +1,10 @@
 import { Mountain } from 'lucide-react'
+import { useMountains } from '../../context/MountainsContext'
 import { getMountainChallengeProgress } from '../../data/mountains'
 
 export function MountainProgressBar() {
-  const { completed, total, percent } = getMountainChallengeProgress()
+  const { mountains, loading } = useMountains()
+  const { completed, total, percent } = getMountainChallengeProgress(mountains)
 
   return (
     <section
@@ -29,10 +31,10 @@ export function MountainProgressBar() {
           </div>
           <div className="flex items-baseline gap-2 sm:text-right">
             <span className="text-2xl font-bold tabular-nums tracking-tight text-forest-900 sm:text-3xl">
-              {percent}%
+              {loading ? '—' : `${percent}%`}
             </span>
             <span className="text-sm tabular-nums text-forest-600">
-              {completed} / {total} 완료
+              {loading ? '불러오는 중…' : `${completed} / ${total} 완료`}
             </span>
           </div>
         </div>
@@ -40,14 +42,14 @@ export function MountainProgressBar() {
         <div
           className="relative h-4 overflow-hidden rounded-full bg-forest-200/80 shadow-inner ring-1 ring-forest-300/40 sm:h-5"
           role="progressbar"
-          aria-valuenow={percent}
+          aria-valuenow={loading ? 0 : percent}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label={`명산 정복 ${percent}퍼센트, ${completed}개 완료`}
         >
           <div
             className="progress-bar-fill relative h-full overflow-hidden rounded-full bg-gradient-to-r from-emerald-600 via-forest-500 to-emerald-500 shadow-[0_0_18px_rgba(16,185,129,0.35)] transition-[width] duration-700 ease-out motion-reduce:transition-none"
-            style={{ width: `${percent}%` }}
+            style={{ width: loading ? '0%' : `${percent}%` }}
           >
             <span className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
             <span

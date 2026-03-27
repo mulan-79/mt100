@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 정복기: 읽기는 공개. 쓰기는 기본 차단(관리자 콘솔·시드 스크립트는 Admin SDK 사용 권장).
+    // VITE_FIREBASE_SEED_IF_EMPTY 사용 시: 잠시 allow write: true 후 배포하고, 시드 후 다시 잠그세요.
+    match /mountains/{mountainId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

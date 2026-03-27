@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Calendar, History, LayoutGrid, MapPin, Search } from 'lucide-react'
+import { useMountains } from '../context/MountainsContext'
 import { JournalDetailModal } from './JournalDetailModal'
-import {
-  MOUNTAIN_FILTER_REGIONS,
-  mountains,
-} from '../data/mountains'
+import { MOUNTAIN_FILTER_REGIONS } from '../data/mountains'
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -98,6 +96,7 @@ function JournalCardContent({ m, variant }) {
 }
 
 export function ReviewList() {
+  const { mountains: allMountains, loading, error, source } = useMountains()
   const [query, setQuery] = useState('')
   const [regionId, setRegionId] = useState('all')
   const [detailMountain, setDetailMountain] = useState(null)
@@ -105,14 +104,14 @@ export function ReviewList() {
 
   const filtered = useMemo(() => {
     const q = normalizeForSearch(query)
-    return mountains.filter((m) => {
+    return allMountains.filter((m) => {
       const nameOk =
         q === '' || normalizeForSearch(m.name).includes(q)
       const regionOk =
         regionId === 'all' || m.region === regionId
       return nameOk && regionOk
     })
-  }, [query, regionId])
+  }, [query, regionId, allMountains])
 
   const timelineList = useMemo(() => sortForTimeline(filtered), [filtered])
 
@@ -232,9 +231,26 @@ export function ReviewList() {
               그 다음 <strong>등산 예정</strong> 산은 난이도 순입니다.
             </p>
           ) : null}
+
+          {error && source === 'local-seed-fallback' ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Firestore에 연결하지 못해 로컬 샘플 데이터를 표시합니다. (
+              {error})
+            </p>
+          ) : null}
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-forest-200 bg-forest-50/80 py-20">
+            <div
+              className="size-10 animate-spin rounded-full border-2 border-forest-200 border-t-forest-600"
+              aria-hidden
+            />
+            <p className="text-sm font-medium text-forest-700">
+              정복기 데이터를 불러오는 중…
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-forest-300 bg-forest-50/80 px-6 py-14 text-center text-forest-700">
             조건에 맞는 정복기가 없습니다. 검색어나 지역을 바꿔 보세요.
           </p>

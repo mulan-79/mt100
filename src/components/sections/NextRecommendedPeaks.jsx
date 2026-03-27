@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, MapPin, Sparkles } from 'lucide-react'
+import { useMountains } from '../../context/MountainsContext'
 import {
   getDifficultyLabel,
   getRecommendedPendingPeaks,
 } from '../../data/mountains'
 
 export function NextRecommendedPeaks() {
-  const picks = getRecommendedPendingPeaks(3)
+  const { mountains, loading } = useMountains()
+  const picks = getRecommendedPendingPeaks(mountains, 3)
 
-  if (picks.length === 0) return null
+  if (loading || picks.length === 0) return null
 
   return (
     <section
