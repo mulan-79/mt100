@@ -76,7 +76,7 @@ export function JournalDetailModal({ mountain, onClose }) {
               <MapPin className="size-6 shrink-0 text-forest-500" aria-hidden />
               <span className="truncate">{mountain.name}</span>
             </h2>
-            {mountain.planned ? (
+            {mountain.status === 'pending' ? (
               <p className="mt-1 text-sm font-medium text-amber-700">등산예정</p>
             ) : (
               <p className="mt-1 flex items-center gap-1.5 text-sm text-forest-700">
@@ -118,7 +118,7 @@ export function JournalDetailModal({ mountain, onClose }) {
             </div>
           </div>
 
-          {!mountain.planned && mountain.reflection ? (
+          {mountain.status === 'completed' && mountain.reflection ? (
             <div className="mt-5 rounded-xl border border-forest-200 bg-white/80 p-4">
               <p className="text-sm font-semibold text-forest-800">소감</p>
               <p className="mt-2 text-sm leading-relaxed text-forest-800/95">

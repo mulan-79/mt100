@@ -142,7 +142,7 @@ export function ReviewList() {
                     </div>
                   </div>
                   <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-                    {m.planned ? (
+                    {m.status === 'pending' ? (
                       <p className="flex items-center gap-2 text-sm font-medium text-forest-600">
                         <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
                         등산예정

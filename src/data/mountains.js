@@ -1,16 +1,36 @@
 /**
  * 정복기 카드용 명산 데이터
- * planned: true 이면 날짜·소감 대신 «등산예정»만 표시
- * weather, duration, gallery: 상세 모달용 (gallery: { src, alt }[])
+ * status: 'completed' | 'pending' — pending 이면 날짜·소감 대신 «등산예정»
+ * difficulty: 1(쉬움) ~ 5(어려움), 추천·정렬용
  */
 export const MOUNTAIN_CHALLENGE_TOTAL = 100
 
-/** 완료: planned 가 아닌 항목 수 / 명산 100 목표 */
+/** 완료 산 개수 / 명산 100 목표 */
 export function getMountainChallengeProgress() {
-  const completed = mountains.filter((m) => !m.planned).length
+  const completed = mountains.filter((m) => m.status === 'completed').length
   const total = MOUNTAIN_CHALLENGE_TOTAL
   const percent = Math.min(100, Math.round((completed / total) * 100))
   return { completed, total, percent }
+}
+
+/** 아직 정복 전(pending) 산 중 난이도 낮은 순 상위 limit개 */
+export function getRecommendedPendingPeaks(limit = 3) {
+  return [...mountains]
+    .filter((m) => m.status === 'pending')
+    .sort((a, b) => a.difficulty - b.difficulty)
+    .slice(0, limit)
+}
+
+/** 난이도 숫자 → 짧은 라벨 */
+export function getDifficultyLabel(level) {
+  const map = {
+    1: '입문',
+    2: '쉬움',
+    3: '보통',
+    4: '어려움',
+    5: '상급',
+  }
+  return map[level] ?? '보통'
 }
 
 /** 정복기 필터용 지역 (전체 + 권역) */
@@ -29,7 +49,8 @@ export const mountains = [
     id: 'hallasan',
     name: '한라산',
     region: '제주',
-    planned: false,
+    status: 'completed',
+    difficulty: 4,
     date: '2025-12-29',
     image: '/images/hallasan.png',
     imageAlt:
@@ -58,7 +79,8 @@ export const mountains = [
     id: 'seoraksan',
     name: '설악산',
     region: '강원',
-    planned: true,
+    status: 'pending',
+    difficulty: 4,
     image:
       'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
     weather:
@@ -75,7 +97,8 @@ export const mountains = [
     id: 'jirisan',
     name: '지리산',
     region: '전라',
-    planned: true,
+    status: 'pending',
+    difficulty: 5,
     image:
       'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80',
     weather:
@@ -96,7 +119,8 @@ export const mountains = [
     id: 'songnisan',
     name: '속리산',
     region: '충청',
-    planned: true,
+    status: 'pending',
+    difficulty: 2,
     image:
       'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=800&q=80&auto=format&fit=crop',
     weather:
@@ -113,7 +137,8 @@ export const mountains = [
     id: 'deogyusan',
     name: '덕유산',
     region: '전라',
-    planned: true,
+    status: 'pending',
+    difficulty: 3,
     image:
       'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80',
     weather:
@@ -134,7 +159,8 @@ export const mountains = [
     id: 'gyeongju',
     name: '토함산',
     region: '경상',
-    planned: true,
+    status: 'pending',
+    difficulty: 1,
     image:
       'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80',
     weather:
