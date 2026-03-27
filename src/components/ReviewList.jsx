@@ -12,6 +12,10 @@ import { useMountains } from '../context/MountainsContext'
 import { JournalDetailModal } from './JournalDetailModal'
 import { JournalWriteModal } from './JournalWriteModal'
 import { MOUNTAIN_FILTER_REGIONS } from '../data/mountains'
+import {
+  JOURNAL_AUTHOR_FILTER_OPTIONS,
+  journalAuthorLabelForEmail,
+} from '../firebase/config'
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -25,6 +29,10 @@ function formatDate(iso) {
 
 function normalizeForSearch(str) {
   return str.trim().toLowerCase()
+}
+
+function normalizeEmail(str) {
+  return String(str ?? '').trim().toLowerCase()
 }
 
 /** 완료 산은 등반일 오름차순(과거→최근), 이후 예정 산은 난이도 순 */
@@ -57,8 +65,15 @@ function JournalCardContent({ m, variant }) {
           decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-forest-900/55 to-transparent sm:bg-gradient-to-r sm:from-black/25 sm:to-transparent" />
-        <span className="absolute right-3 top-3 rounded-md bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-          {m.region}
+        <span className="absolute right-3 top-3 flex flex-wrap items-center justify-end gap-1">
+          {m.isJournalPost ? (
+            <span className="rounded-md bg-emerald-600/90 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-sm">
+              {journalAuthorLabelForEmail(m.userEmail) ?? '기록'}
+            </span>
+          ) : null}
+          <span className="rounded-md bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+            {m.region}
+          </span>
         </span>
         <div className="absolute bottom-3 left-3 right-3 sm:bottom-auto sm:left-3 sm:top-1/2 sm:right-auto sm:-translate-y-1/2">
           <span className="flex items-center gap-1.5 font-semibold text-white drop-shadow-md">
@@ -112,6 +127,7 @@ export function ReviewList() {
   const [detailMountain, setDetailMountain] = useState(null)
   const [writeOpen, setWriteOpen] = useState(false)
   const [viewMode, setViewMode] = useState('grid')
+  const [journalAuthorId, setJournalAuthorId] = useState('all')
 
   const filtered = useMemo(() => {
     const q = normalizeForSearch(query)
@@ -120,9 +136,13 @@ export function ReviewList() {
         q === '' || normalizeForSearch(m.name).includes(q)
       const regionOk =
         regionId === 'all' || m.region === regionId
-      return nameOk && regionOk
+      const authorOk =
+        journalAuthorId === 'all' ||
+        !m.isJournalPost ||
+        normalizeEmail(m.userEmail) === journalAuthorId
+      return nameOk && regionOk && authorOk
     })
-  }, [query, regionId, allMountains])
+  }, [query, regionId, journalAuthorId, allMountains])
 
   const timelineList = useMemo(() => sortForTimeline(filtered), [filtered])
 
@@ -153,6 +173,9 @@ export function ReviewList() {
             <p className="mt-3 text-base leading-relaxed text-forest-800/85">
               오른 산의 풍경과 그날의 기분을 짧게 남긴 기록입니다. 카드를 누르면 상세 정보를
               볼 수 있어요. 타임라인 보기에서는 등반일 기준으로 과거부터 최근 순으로 정렬됩니다.
+              {isAuthorized
+                ? ' 직접 기록은 아래에서 작성자별로 골라 볼 수 있어요.'
+                : ''}
             </p>
           </div>
 
@@ -213,6 +236,38 @@ export function ReviewList() {
                 })}
               </div>
             </div>
+
+            {isAuthorized ? (
+              <div className="min-w-0 flex-1 sm:max-w-md">
+                <p className="mb-2 text-xs font-medium text-forest-600">
+                  직접 기록 작성자
+                </p>
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="직접 기록 작성자 필터"
+                >
+                  {JOURNAL_AUTHOR_FILTER_OPTIONS.map((opt) => {
+                    const selected = journalAuthorId === opt.id
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setJournalAuthorId(opt.id)}
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600 ${
+                          selected
+                            ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
+                            : 'border-forest-200 bg-white/90 text-forest-800 hover:border-emerald-400 hover:bg-emerald-50/80'
+                        }`}
+                        aria-pressed={selected}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
 
             <div>
               <p className="mb-2 text-xs font-medium text-forest-600">보기</p>

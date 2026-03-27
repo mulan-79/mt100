@@ -1,4 +1,4 @@
 [
-  "rainym002@gmail.com",
-  "jurio84@gmail.com"
+  { "email": "rainym002@gmail.com", "label": "mulan" },
+  { "email": "jurio84@gmail.com", "label": "jurio" }
 ]

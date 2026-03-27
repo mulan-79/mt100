@@ -2,7 +2,17 @@ import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
-import authorizedUsers from './authorizedUsers.json'
+import authorizedUsersRaw from './authorizedUsers.json'
+
+/** @typedef {{ email: string, label: string }} AuthorizedUserEntry */
+const authorizedEntries = authorizedUsersRaw.map((entry) =>
+  typeof entry === 'string'
+    ? { email: entry.trim(), label: entry.split('@')[0] }
+    : {
+        email: String(entry.email).trim(),
+        label: String(entry.label ?? entry.email.split('@')[0]).trim(),
+      },
+)
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,7 +23,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const AUTHORIZED_USERS = [...authorizedUsers]
+export const AUTHORIZED_USERS = authorizedEntries.map((e) => e.email)
+
+/** 글쓰기 권한자 전용: 직접 기록(isJournalPost) 작성자 필터 옵션 */
+export const JOURNAL_AUTHOR_FILTER_OPTIONS = [
+  { id: 'all', label: '직접 기록 전체' },
+  ...authorizedEntries.map((e) => ({
+    id: e.email.toLowerCase(),
+    label: e.label,
+  })),
+]
 
 export function isFirebaseConfigured() {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
@@ -22,6 +41,13 @@ export function isFirebaseConfigured() {
 export function isAuthorizedUserEmail(email) {
   const normalized = String(email ?? '').trim().toLowerCase()
   return AUTHORIZED_USERS.some((allowed) => allowed.toLowerCase() === normalized)
+}
+
+/** 직접 기록 카드 배지 등에 사용 */
+export function journalAuthorLabelForEmail(email) {
+  const n = String(email ?? '').trim().toLowerCase()
+  const found = authorizedEntries.find((e) => e.email.toLowerCase() === n)
+  return found?.label ?? null
 }
 
 let appInstance = null

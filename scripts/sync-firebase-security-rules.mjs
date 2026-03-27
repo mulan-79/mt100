@@ -12,15 +12,20 @@ const usersPath = join(root, 'src', 'firebase', 'authorizedUsers.json')
 
 const raw = JSON.parse(readFileSync(usersPath, 'utf8'))
 if (!Array.isArray(raw) || raw.length === 0) {
-  throw new Error('authorizedUsers.json 은 비어 있지 않은 문자열 배열이어야 합니다.')
+  throw new Error('authorizedUsers.json 은 비어 있지 않은 배열이어야 합니다.')
 }
+
+const emails = raw.map((e) => {
+  if (typeof e === 'string') return String(e).trim().toLowerCase()
+  if (e && typeof e.email === 'string') return String(e.email).trim().toLowerCase()
+  throw new Error(`authorizedUsers.json 항목 형식 오류: ${JSON.stringify(e)}`)
+})
 
 const emailsInClause =
   '[' +
-  raw
-    .map((e) => {
-      const s = String(e).trim().toLowerCase()
-      if (!s.includes('@')) throw new Error(`유효하지 않은 이메일: ${e}`)
+  emails
+    .map((s) => {
+      if (!s.includes('@')) throw new Error(`유효하지 않은 이메일: ${s}`)
       const escaped = s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
       return `'${escaped}'`
     })
