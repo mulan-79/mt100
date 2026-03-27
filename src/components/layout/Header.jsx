@@ -18,20 +18,23 @@ export function Header() {
   const { user, loading, isAuthorized, isEnabled, signInWithGoogle, logout } =
     useAuth()
 
+  const focusRing =
+    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600'
+
   const authButton = user ? (
     <button
       type="button"
       onClick={logout}
-      className="inline-flex items-center justify-center gap-2 rounded-lg border border-forest-200 bg-white px-3 py-2 text-sm font-medium text-forest-800 transition hover:bg-forest-50"
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-forest-200 bg-white px-3 py-2 text-sm font-medium text-forest-800 transition hover:bg-forest-50 ${focusRing}`}
     >
-      <LogOut className="size-4" aria-hidden />
+      <LogOut className="size-4 text-forest-600" aria-hidden />
       로그아웃
     </button>
   ) : (
     <button
       type="button"
       onClick={signInWithGoogle}
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-forest-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:opacity-60"
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-forest-300 bg-white px-3 py-2 text-sm font-medium text-forest-800 shadow-sm transition hover:border-forest-500 hover:bg-forest-100 hover:text-forest-900 disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`}
       disabled={loading || !isEnabled}
       title={
         !isEnabled
@@ -39,7 +42,7 @@ export function Header() {
           : undefined
       }
     >
-      <LogIn className="size-4" aria-hidden />
+      <LogIn className="size-4 text-forest-600" aria-hidden />
       구글 로그인
     </button>
   )
