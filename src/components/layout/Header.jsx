@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { LogIn, LogOut, Menu, Mountain, ShieldCheck, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -18,7 +18,7 @@ export function Header() {
   const { user, loading, isAuthorized, isEnabled, signInWithGoogle, logout } =
     useAuth()
 
-  const authButton = !isEnabled ? null : user ? (
+  const authButton = user ? (
     <button
       type="button"
       onClick={logout}
@@ -31,13 +31,29 @@ export function Header() {
     <button
       type="button"
       onClick={signInWithGoogle}
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-forest-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-forest-700"
-      disabled={loading}
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-forest-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:opacity-60"
+      disabled={loading || !isEnabled}
+      title={
+        !isEnabled
+          ? 'Cloudflare Pages 빌드에 VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID 등 환경 변수를 넣고 재배포하세요.'
+          : undefined
+      }
     >
       <LogIn className="size-4" aria-hidden />
       구글 로그인
     </button>
   )
+
+  const authDisabledHint = !isEnabled ? (
+    <p
+      className="max-w-xs text-xs leading-snug text-amber-800"
+      title="Vite는 빌드 시점에만 VITE_* 변수를 넣습니다. 저장 후 Deployments에서 재배포하세요."
+    >
+      Firebase 미연결: Pages <strong className="font-semibold">Production</strong> 환경 변수에{' '}
+      <code className="rounded bg-amber-100/80 px-1">VITE_FIREBASE_*</code> 전부 넣은 뒤{' '}
+      <strong className="font-semibold">재배포</strong>가 필요합니다.
+    </p>
+  ) : null
 
   return (
     <header className="sticky top-0 z-50 border-b border-forest-200/80 bg-forest-50/90 backdrop-blur-md">
@@ -81,7 +97,10 @@ export function Header() {
             </div>
           ) : null}
 
-          {authButton}
+          <div className="flex min-w-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
+            {authDisabledHint}
+            {authButton}
+          </div>
         </div>
 
         <button
@@ -124,20 +143,23 @@ export function Header() {
             ))}
           </ul>
 
-          {isEnabled ? (
-            <div className="mt-3 border-t border-forest-200 pt-3">
-              {user ? (
-                <div className="mb-2 rounded-lg border border-forest-200 bg-white px-3 py-2 text-xs text-forest-700">
-                  <p className="truncate">{user.email}</p>
-                  {isAuthorized ? (
-                    <p className="mt-1 font-medium text-emerald-700">글쓰기 권한 있음</p>
-                  ) : null}
-                </div>
-              ) : null}
+          <div className="mt-3 border-t border-forest-200 pt-3">
+            {authDisabledHint ? (
+              <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                {authDisabledHint}
+              </div>
+            ) : null}
+            {user ? (
+              <div className="mb-2 rounded-lg border border-forest-200 bg-white px-3 py-2 text-xs text-forest-700">
+                <p className="truncate">{user.email}</p>
+                {isAuthorized ? (
+                  <p className="mt-1 font-medium text-emerald-700">글쓰기 권한 있음</p>
+                ) : null}
+              </div>
+            ) : null}
 
-              <div onClick={() => setOpen(false)}>{authButton}</div>
-            </div>
-          ) : null}
+            <div onClick={() => setOpen(false)}>{authButton}</div>
+          </div>
         </nav>
       ) : null}
     </header>
