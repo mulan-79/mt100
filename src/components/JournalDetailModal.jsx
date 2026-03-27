@@ -8,7 +8,6 @@ import {
   X,
 } from 'lucide-react'
 import { CommentThread } from './CommentThread'
-import { isFirebaseConfigured } from '../firebase/config'
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -48,9 +47,8 @@ export function JournalDetailModal({ mountain, onClose }) {
 
   if (!mountain) return null
 
-  const firebaseOn = isFirebaseConfigured()
   const commentCollection = mountain.isJournalPost ? 'journal_posts' : 'mountains'
-  const commentParentId = firebaseOn && mountain.id ? mountain.id : ''
+  const commentParentId = mountain.id != null && mountain.id !== '' ? String(mountain.id) : ''
 
   const gallery = mountain.gallery ?? [{ src: mountain.image, alt: mountain.imageAlt ?? mountain.name }]
 
@@ -105,7 +103,7 @@ export function JournalDetailModal({ mountain, onClose }) {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-10 sm:px-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-forest-200 bg-white p-4 shadow-sm">
               <div className="mb-2 flex items-center gap-2 text-forest-600">
@@ -136,6 +134,12 @@ export function JournalDetailModal({ mountain, onClose }) {
             </div>
           ) : null}
 
+          <CommentThread
+            key={`${commentCollection}-${mountain.id}`}
+            parentCollection={commentCollection}
+            parentId={commentParentId}
+          />
+
           <div className="mt-6">
             <div className="mb-3 flex items-center gap-2 text-forest-800">
               <Images className="size-5 text-forest-600" aria-hidden />
@@ -160,12 +164,6 @@ export function JournalDetailModal({ mountain, onClose }) {
               ))}
             </ul>
           </div>
-
-          <CommentThread
-            key={`${commentCollection}-${mountain.id}`}
-            parentCollection={commentCollection}
-            parentId={commentParentId}
-          />
         </div>
       </div>
     </div>

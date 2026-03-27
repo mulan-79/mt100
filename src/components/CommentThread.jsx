@@ -33,7 +33,7 @@ function formatCommentTime(ts) {
  * }} props
  */
 export function CommentThread({ parentCollection, parentId, disabledHint }) {
-  const { user, isEnabled } = useAuth()
+  const { user } = useAuth()
   const [remoteComments, setRemoteComments] = useState([])
   const [listReady, setListReady] = useState(false)
   const [error, setError] = useState(null)
@@ -41,9 +41,10 @@ export function CommentThread({ parentCollection, parentId, disabledHint }) {
   const [submitting, setSubmitting] = useState(false)
 
   const firebaseOn = isFirebaseConfigured()
-  const canUseRemote = Boolean(
-    firebaseOn && parentId && !disabledHint,
-  )
+  const hasParent = Boolean(parentId && String(parentId).length > 0)
+  const canUseRemote = Boolean(firebaseOn && hasParent && !disabledHint)
+  /** 로그인 + 부모 id 있으면 입력 UI 표시(Firebase만 꺼져 있으면 비활성) */
+  const showComposer = Boolean(user && hasParent && !disabledHint)
 
   useEffect(() => {
     if (!canUseRemote) return undefined
@@ -132,8 +133,13 @@ export function CommentThread({ parentCollection, parentId, disabledHint }) {
         </p>
       ) : null}
 
-      {canUseRemote && isEnabled && user ? (
-        <form onSubmit={handleSubmit} className="mb-6 space-y-2">
+      {showComposer ? (
+        <form onSubmit={handleSubmit} className="mb-6 space-y-3">
+          {!firebaseOn ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Firebase가 연결되지 않아 댓글을 보낼 수 없습니다. 배포 환경의 VITE_FIREBASE_* 변수를 확인해 주세요.
+            </p>
+          ) : null}
           <label htmlFor={`comment-${parentCollection}-${parentId}`} className="sr-only">
             댓글 입력
           </label>
@@ -144,14 +150,17 @@ export function CommentThread({ parentCollection, parentId, disabledHint }) {
             rows={3}
             maxLength={2000}
             placeholder="댓글을 입력하세요."
-            disabled={submitting}
-            className="w-full resize-y rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-50"
+            disabled={submitting || !firebaseOn}
+            className="w-full resize-y rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-100 disabled:text-forest-500"
           />
-          <div className="flex justify-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-forest-500 sm:order-2">
+              {text.length}/2000
+            </p>
             <button
               type="submit"
-              disabled={submitting || !text.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-forest-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={submitting || !firebaseOn || !text.trim()}
+              className="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-forest-700 bg-forest-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:border-forest-300 disabled:bg-forest-200 disabled:text-forest-600 disabled:shadow-none sm:order-1 sm:w-auto"
             >
               {submitting ? (
                 <>
@@ -166,7 +175,7 @@ export function CommentThread({ parentCollection, parentId, disabledHint }) {
         </form>
       ) : null}
 
-      {canUseRemote && isEnabled && !user ? (
+      {hasParent && !disabledHint && !user ? (
         <p className="mb-6 rounded-lg border border-forest-200 bg-white/80 px-3 py-2 text-sm text-forest-600">
           댓글을 작성하려면 상단에서 로그인해 주세요.
         </p>

@@ -88,7 +88,7 @@ export function GearDetailModal({ gear, onClose }) {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-10 sm:px-6">
           {gear.imageUrl ? (
             <div className="overflow-hidden rounded-xl border border-forest-200 bg-forest-100 shadow-sm">
               <img
