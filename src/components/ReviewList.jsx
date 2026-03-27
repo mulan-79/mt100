@@ -1,5 +1,9 @@
-import { Calendar, MapPin } from 'lucide-react'
-import { mountains } from '../data/mountains'
+import { useMemo, useState } from 'react'
+import { Calendar, MapPin, Search } from 'lucide-react'
+import {
+  MOUNTAIN_FILTER_REGIONS,
+  mountains,
+} from '../data/mountains'
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -11,7 +15,25 @@ function formatDate(iso) {
   }).format(d)
 }
 
+function normalizeForSearch(str) {
+  return str.trim().toLowerCase()
+}
+
 export function ReviewList() {
+  const [query, setQuery] = useState('')
+  const [regionId, setRegionId] = useState('all')
+
+  const filtered = useMemo(() => {
+    const q = normalizeForSearch(query)
+    return mountains.filter((m) => {
+      const nameOk =
+        q === '' || normalizeForSearch(m.name).includes(q)
+      const regionOk =
+        regionId === 'all' || m.region === regionId
+      return nameOk && regionOk
+    })
+  }, [query, regionId])
+
   return (
     <section
       id="journal"
@@ -19,7 +41,7 @@ export function ReviewList() {
       aria-labelledby="journal-heading"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-10 max-w-2xl">
+        <div className="mb-8 max-w-2xl">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-forest-600">
             Journal
           </p>
@@ -34,47 +56,101 @@ export function ReviewList() {
           </p>
         </div>
 
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {mountains.map((m) => (
-            <li key={m.id}>
-              <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 shadow-sm transition hover:border-forest-300 hover:shadow-md">
-                <div className="relative aspect-[4/3] overflow-hidden bg-forest-200">
-                  <img
-                    src={m.image}
-                    alt={m.imageAlt ?? `${m.name} 풍경 사진`}
-                    className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-forest-900/50 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
-                    <h3 className="flex items-center gap-1.5 font-semibold text-white drop-shadow-sm">
-                      <MapPin className="size-4 shrink-0 opacity-90" aria-hidden />
-                      {m.name}
-                    </h3>
+        <div className="mb-8 flex flex-col gap-4">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-forest-500"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="산 이름 검색 (예: 한라산, 설악)"
+              aria-label="산 이름 검색"
+              className="w-full rounded-xl border border-forest-200 bg-white py-3 pl-11 pr-4 text-sm text-forest-900 shadow-sm outline-none ring-forest-500/30 transition placeholder:text-forest-400 focus:border-forest-400 focus:ring-2"
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-medium text-forest-600">지역</p>
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="지역 필터"
+            >
+              {MOUNTAIN_FILTER_REGIONS.map((r) => {
+                const selected = regionId === r.id
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setRegionId(r.id)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600 ${
+                      selected
+                        ? 'border-forest-600 bg-forest-600 text-white shadow-sm'
+                        : 'border-forest-200 bg-white/90 text-forest-800 hover:border-forest-400 hover:bg-forest-50'
+                    }`}
+                    aria-pressed={selected}
+                  >
+                    {r.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-forest-300 bg-forest-50/80 px-6 py-14 text-center text-forest-700">
+            조건에 맞는 정복기가 없습니다. 검색어나 지역을 바꿔 보세요.
+          </p>
+        ) : (
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((m) => (
+              <li key={m.id}>
+                <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 shadow-sm transition hover:border-forest-300 hover:shadow-md">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-forest-200">
+                    <img
+                      src={m.image}
+                      alt={m.imageAlt ?? `${m.name} 풍경 사진`}
+                      className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-forest-900/50 to-transparent" />
+                    <span className="absolute right-3 top-3 rounded-md bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                      {m.region}
+                    </span>
+                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+                      <h3 className="flex items-center gap-1.5 font-semibold text-white drop-shadow-sm">
+                        <MapPin className="size-4 shrink-0 opacity-90" aria-hidden />
+                        {m.name}
+                      </h3>
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-                  {m.planned ? (
-                    <p className="flex items-center gap-2 text-sm font-medium text-forest-600">
-                      <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
-                      등산예정
-                    </p>
-                  ) : (
-                    <>
-                      <p className="flex items-center gap-2 text-sm text-forest-700/90">
+                  <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+                    {m.planned ? (
+                      <p className="flex items-center gap-2 text-sm font-medium text-forest-600">
                         <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
-                        <time dateTime={m.date}>{formatDate(m.date)}</time>
+                        등산예정
                       </p>
-                      <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-forest-800/95">
-                        {m.reflection}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </article>
-            </li>
-          ))}
-        </ul>
+                    ) : (
+                      <>
+                        <p className="flex items-center gap-2 text-sm text-forest-700/90">
+                          <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
+                          <time dateTime={m.date}>{formatDate(m.date)}</time>
+                        </p>
+                        <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-forest-800/95">
+                          {m.reflection}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   )
