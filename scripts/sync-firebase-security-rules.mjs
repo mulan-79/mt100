@@ -32,6 +32,28 @@ const emailsInClause =
     .join(', ') +
   ']'
 
+/** journal_posts / mountains / gears 공통 댓글 서브컬렉션 */
+const commentsSubcollectionRules = `
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.token.email != null
+        && request.resource.data.keys().hasOnly(['text', 'authorName', 'authorEmail', 'createdAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.authorName is string
+        && request.resource.data.authorName.size() > 0
+        && request.resource.data.authorName.size() <= 100
+        && request.resource.data.authorEmail is string
+        && request.resource.data.authorEmail.lower() == request.auth.token.email.lower()
+        && request.resource.data.createdAt is timestamp;
+      allow update: if false;
+      allow delete: if request.auth != null
+        && request.auth.token.email != null
+        && resource.data.authorEmail.lower() == request.auth.token.email.lower();
+    }`
+
 const firestoreRules = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -40,6 +62,7 @@ service cloud.firestore {
     match /mountains/{mountainId} {
       allow read: if true;
       allow write: if false;
+${commentsSubcollectionRules}
     }
 
     // 사용자 정복기 글: 허용 이메일만 생성 (목록은 authorizedUsers.json → npm run sync:firebase-rules)
@@ -61,6 +84,7 @@ service cloud.firestore {
         && request.resource.data.imageUrl is string
         && request.resource.data.imageUrl.size() > 0;
       allow update, delete: if false;
+${commentsSubcollectionRules}
     }
 
     // 장비 소개 CMS: gears (authorizedUsers.json 동기화)
@@ -102,6 +126,7 @@ service cloud.firestore {
       allow delete: if request.auth != null
         && request.auth.token.email != null
         && request.auth.token.email.lower() in ${emailsInClause};
+${commentsSubcollectionRules}
     }
   }
 }

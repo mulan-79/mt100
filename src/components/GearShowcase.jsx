@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext'
 import { gearCategories, getStaticGearFallback } from '../data/gear'
 import { isFirebaseConfigured, journalAuthorLabelForEmail } from '../firebase/config'
 import { deleteGear, subscribeGears } from '../firebase/gearsFirestore'
+import { GearDetailModal } from './GearDetailModal'
 import { GearFormModal } from './GearFormModal'
 
 const categoryIcon = {
@@ -35,6 +36,7 @@ export function GearShowcase() {
   const [loadError, setLoadError] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingGear, setEditingGear] = useState(null)
+  const [detailGear, setDetailGear] = useState(null)
 
   const firebaseOn = isFirebaseConfigured()
   const [gearsReady, setGearsReady] = useState(() => !firebaseOn)
@@ -124,6 +126,10 @@ export function GearShowcase() {
         open={formOpen}
         onClose={closeForm}
         editingGear={editingGear}
+      />
+      <GearDetailModal
+        gear={detailGear}
+        onClose={() => setDetailGear(null)}
       />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -232,39 +238,49 @@ export function GearShowcase() {
               {filtered.map((item) => (
                 <li key={item.id}>
                   <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-white/90 shadow-sm transition hover:border-earth-300/80 hover:shadow-md">
-                    <div className="relative aspect-[4/3] w-full shrink-0 bg-forest-100">
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt=""
-                          className="absolute inset-0 h-full w-full object-cover object-center"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-forest-500">
-                          <ImageOff className="size-10 opacity-60" aria-hidden />
-                          <span className="text-xs font-medium">샘플 · 이미지 없음</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-1 flex-col p-5">
-                      <h3 className="text-lg font-semibold tracking-tight text-forest-900">
-                        {item.name}
-                      </h3>
-                      <p className="mt-3 flex-1 text-sm leading-relaxed text-forest-800/90">
-                        {item.description}
-                      </p>
-                      {item.author ? (
-                        <p className="mt-3 text-xs text-forest-500">
-                          추천: {authorCaption(item.author)}
+                    <button
+                      type="button"
+                      onClick={() => setDetailGear(item)}
+                      className="flex w-full flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600"
+                    >
+                      <div className="relative aspect-[4/3] w-full shrink-0 bg-forest-100">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt=""
+                            className="absolute inset-0 h-full w-full object-cover object-center"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-forest-500">
+                            <ImageOff className="size-10 opacity-60" aria-hidden />
+                            <span className="text-xs font-medium">샘플 · 이미지 없음</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col p-5">
+                        <h3 className="text-lg font-semibold tracking-tight text-forest-900">
+                          {item.name}
+                        </h3>
+                        <p className="mt-3 line-clamp-4 flex-1 text-sm leading-relaxed text-forest-800/90">
+                          {item.description}
                         </p>
-                      ) : item.isSample ? (
-                        <p className="mt-3 text-xs text-forest-400">샘플 데이터</p>
-                      ) : null}
+                        {item.author ? (
+                          <p className="mt-3 text-xs text-forest-500">
+                            추천: {authorCaption(item.author)}
+                          </p>
+                        ) : item.isSample ? (
+                          <p className="mt-3 text-xs text-forest-400">샘플 데이터</p>
+                        ) : null}
+                        <span className="mt-2 text-xs font-medium text-forest-400">
+                          탭하여 상세·댓글 보기
+                        </span>
+                      </div>
+                    </button>
 
-                      {isAuthorized && !item.isSample ? (
-                        <div className="mt-4 flex flex-wrap gap-2 border-t border-forest-100 pt-4">
+                    {isAuthorized && !item.isSample ? (
+                      <div className="flex flex-wrap gap-2 border-t border-forest-100 px-5 pb-4 pt-3">
                           <button
                             type="button"
                             onClick={() => openEdit(item)}
@@ -281,9 +297,8 @@ export function GearShowcase() {
                             <Trash2 className="size-3.5" aria-hidden />
                             삭제
                           </button>
-                        </div>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
                   </article>
                 </li>
               ))}

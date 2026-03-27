@@ -7,6 +7,8 @@ import {
   MapPin,
   X,
 } from 'lucide-react'
+import { CommentThread } from './CommentThread'
+import { isFirebaseConfigured } from '../firebase/config'
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -45,6 +47,10 @@ export function JournalDetailModal({ mountain, onClose }) {
   }, [mountain, onClose])
 
   if (!mountain) return null
+
+  const firebaseOn = isFirebaseConfigured()
+  const commentCollection = mountain.isJournalPost ? 'journal_posts' : 'mountains'
+  const commentParentId = firebaseOn && mountain.id ? mountain.id : ''
 
   const gallery = mountain.gallery ?? [{ src: mountain.image, alt: mountain.imageAlt ?? mountain.name }]
 
@@ -154,6 +160,12 @@ export function JournalDetailModal({ mountain, onClose }) {
               ))}
             </ul>
           </div>
+
+          <CommentThread
+            key={`${commentCollection}-${mountain.id}`}
+            parentCollection={commentCollection}
+            parentId={commentParentId}
+          />
         </div>
       </div>
     </div>
