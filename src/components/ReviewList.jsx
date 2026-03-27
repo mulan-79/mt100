@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Calendar, MapPin, Search } from 'lucide-react'
+import { JournalDetailModal } from './JournalDetailModal'
 import {
   MOUNTAIN_FILTER_REGIONS,
   mountains,
@@ -22,6 +23,7 @@ function normalizeForSearch(str) {
 export function ReviewList() {
   const [query, setQuery] = useState('')
   const [regionId, setRegionId] = useState('all')
+  const [detailMountain, setDetailMountain] = useState(null)
 
   const filtered = useMemo(() => {
     const q = normalizeForSearch(query)
@@ -40,6 +42,11 @@ export function ReviewList() {
       className="scroll-mt-20 border-b border-forest-200 bg-white/60 py-16 sm:py-20"
       aria-labelledby="journal-heading"
     >
+      <JournalDetailModal
+        mountain={detailMountain}
+        onClose={() => setDetailMountain(null)}
+      />
+
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-8 max-w-2xl">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-forest-600">
@@ -52,7 +59,8 @@ export function ReviewList() {
             정복기
           </h2>
           <p className="mt-3 text-base leading-relaxed text-forest-800/85">
-            오른 산의 풍경과 그날의 기분을 짧게 남긴 기록입니다.
+            오른 산의 풍경과 그날의 기분을 짧게 남긴 기록입니다. 카드를 누르면 상세 정보를
+            볼 수 있어요.
           </p>
         </div>
 
@@ -109,7 +117,11 @@ export function ReviewList() {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((m) => (
               <li key={m.id}>
-                <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 shadow-sm transition hover:border-forest-300 hover:shadow-md">
+                <button
+                  type="button"
+                  onClick={() => setDetailMountain(m)}
+                  className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 text-left shadow-sm transition hover:border-forest-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600"
+                >
                   <div className="relative aspect-[4/3] overflow-hidden bg-forest-200">
                     <img
                       src={m.image}
@@ -122,10 +134,10 @@ export function ReviewList() {
                       {m.region}
                     </span>
                     <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
-                      <h3 className="flex items-center gap-1.5 font-semibold text-white drop-shadow-sm">
+                      <span className="flex items-center gap-1.5 font-semibold text-white drop-shadow-sm">
                         <MapPin className="size-4 shrink-0 opacity-90" aria-hidden />
                         {m.name}
-                      </h3>
+                      </span>
                     </div>
                   </div>
                   <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
@@ -145,8 +157,11 @@ export function ReviewList() {
                         </p>
                       </>
                     )}
+                    <span className="text-xs font-medium text-forest-500">
+                      탭하여 상세 보기
+                    </span>
                   </div>
-                </article>
+                </button>
               </li>
             ))}
           </ul>
