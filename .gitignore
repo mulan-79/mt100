@@ -8,6 +8,14 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# 로컬 환경 변수 (Firebase 키 등)
+.env
+.env.*
+!.env.example
+!.env.firebase.example
+.env.firebase
+
 dist
 dist-ssr
 *.local

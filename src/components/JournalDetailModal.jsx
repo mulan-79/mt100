@@ -84,6 +84,9 @@ export function JournalDetailModal({ mountain, onClose }) {
                 <time dateTime={mountain.date}>{formatDate(mountain.date)}</time>
               </p>
             )}
+            {mountain.userEmail ? (
+              <p className="mt-1 text-xs text-forest-500">작성: {mountain.userEmail}</p>
+            ) : null}
           </div>
           <button
             ref={closeRef}

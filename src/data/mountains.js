@@ -16,6 +16,7 @@ export function getMountainChallengeProgress(mountainsList) {
 
 export const MOUNTAIN_FILTER_REGIONS = [
   { id: 'all', label: '전체' },
+  { id: '기록', label: '직접 기록' },
   { id: '강원', label: '강원' },
   { id: '경기', label: '경기' },
   { id: '충청', label: '충청' },

@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Menu, Mountain, X } from 'lucide-react'
+﻿import { useState } from 'react'
+import { LogIn, LogOut, Menu, Mountain, ShieldCheck, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { navItems } from '../../data/navigation'
 
 function navClassName({ isActive }) {
@@ -14,6 +15,29 @@ function navClassName({ isActive }) {
 
 export function Header() {
   const [open, setOpen] = useState(false)
+  const { user, loading, isAuthorized, isEnabled, signInWithGoogle, logout } =
+    useAuth()
+
+  const authButton = !isEnabled ? null : user ? (
+    <button
+      type="button"
+      onClick={logout}
+      className="inline-flex items-center justify-center gap-2 rounded-lg border border-forest-200 bg-white px-3 py-2 text-sm font-medium text-forest-800 transition hover:bg-forest-50"
+    >
+      <LogOut className="size-4" aria-hidden />
+      로그아웃
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={signInWithGoogle}
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-forest-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-forest-700"
+      disabled={loading}
+    >
+      <LogIn className="size-4" aria-hidden />
+      구글 로그인
+    </button>
+  )
 
   return (
     <header className="sticky top-0 z-50 border-b border-forest-200/80 bg-forest-50/90 backdrop-blur-md">
@@ -31,21 +55,34 @@ export function Header() {
           </span>
         </Link>
 
-        <nav
-          className="hidden items-center gap-1 md:flex"
-          aria-label="주요 메뉴"
-        >
-          {navItems.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              end={item.path === '/'}
-              className={navClassName}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="hidden items-center gap-3 md:flex">
+          <nav className="flex items-center gap-1" aria-label="주요 메뉴">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                end={item.path === '/'}
+                className={navClassName}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {user ? (
+            <div className="hidden items-center gap-2 rounded-lg border border-forest-200 bg-white/80 px-3 py-2 text-xs text-forest-700 lg:flex">
+              <span className="truncate max-w-44">{user.email}</span>
+              {isAuthorized ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                  <ShieldCheck className="size-3.5" aria-hidden />
+                  글쓰기 권한
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          {authButton}
+        </div>
 
         <button
           type="button"
@@ -86,6 +123,21 @@ export function Header() {
               </li>
             ))}
           </ul>
+
+          {isEnabled ? (
+            <div className="mt-3 border-t border-forest-200 pt-3">
+              {user ? (
+                <div className="mb-2 rounded-lg border border-forest-200 bg-white px-3 py-2 text-xs text-forest-700">
+                  <p className="truncate">{user.email}</p>
+                  {isAuthorized ? (
+                    <p className="mt-1 font-medium text-emerald-700">글쓰기 권한 있음</p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div onClick={() => setOpen(false)}>{authButton}</div>
+            </div>
+          ) : null}
         </nav>
       ) : null}
     </header>

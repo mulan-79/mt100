@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { MOUNTAIN_SEED_DATA } from '../data/mountainsSeed'
 import { isFirebaseConfigured } from '../firebase/config'
+import { subscribeJournalPosts } from '../firebase/journalPostsFirestore'
 import {
   seedMountainsFromDefaultsIfEmpty,
   subscribeMountains,
@@ -24,21 +25,32 @@ const MountainsContext = createContext(
 )
 
 export function MountainsProvider({ children }) {
-  const [mountains, setMountains] = useState([])
-  const [loading, setLoading] = useState(true)
+  const firebaseOn = isFirebaseConfigured()
+
+  const [baseMountains, setBaseMountains] = useState(() =>
+    firebaseOn ? [] : MOUNTAIN_SEED_DATA,
+  )
+  const [journalMountains, setJournalMountains] = useState([])
+  const [mountainsReady, setMountainsReady] = useState(() => !firebaseOn)
+  const [journalReady, setJournalReady] = useState(() => !firebaseOn)
   const [error, setError] = useState(null)
-  const [source, setSource] = useState('unknown')
+  const [source, setSource] = useState(() => (firebaseOn ? 'unknown' : 'local-seed'))
+
+  const mountains = useMemo(
+    () => [...journalMountains, ...baseMountains],
+    [journalMountains, baseMountains],
+  )
+
+  const loading = useMemo(
+    () => (firebaseOn ? !mountainsReady || !journalReady : false),
+    [firebaseOn, mountainsReady, journalReady],
+  )
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) {
-      setMountains(MOUNTAIN_SEED_DATA)
-      setLoading(false)
-      setError(null)
-      setSource('local-seed')
-      return undefined
-    }
+    if (!firebaseOn) return undefined
 
-    let unsub = () => {}
+    let unsubMountains = () => {}
+    let unsubJournal = () => {}
     let cancelled = false
 
     ;(async () => {
@@ -51,30 +63,45 @@ export function MountainsProvider({ children }) {
       }
       if (cancelled) return
 
-      unsub = subscribeMountains(
+      unsubMountains = subscribeMountains(
         (list) => {
           if (cancelled) return
           setError(null)
-          setMountains(list)
-          setLoading(false)
+          setBaseMountains(list)
+          setMountainsReady(true)
           setSource('firestore')
         },
         (err) => {
           if (cancelled) return
           console.error('[Firestore]', err)
           setError(err?.message ?? String(err))
-          setMountains(MOUNTAIN_SEED_DATA)
-          setLoading(false)
+          setBaseMountains(MOUNTAIN_SEED_DATA)
+          setMountainsReady(true)
           setSource('local-seed-fallback')
+        },
+      )
+
+      unsubJournal = subscribeJournalPosts(
+        (list) => {
+          if (cancelled) return
+          setJournalMountains(list)
+          setJournalReady(true)
+        },
+        (err) => {
+          if (cancelled) return
+          console.error('[Firestore journal_posts]', err)
+          setJournalMountains([])
+          setJournalReady(true)
         },
       )
     })()
 
     return () => {
       cancelled = true
-      unsub()
+      unsubMountains()
+      unsubJournal()
     }
-  }, [])
+  }, [firebaseOn])
 
   const value = useMemo(
     () => ({ mountains, loading, error, source }),
@@ -88,6 +115,7 @@ export function MountainsProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useMountains() {
   return useContext(MountainsContext)
 }

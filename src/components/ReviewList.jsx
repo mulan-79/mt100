@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react'
-import { Calendar, History, LayoutGrid, MapPin, Search } from 'lucide-react'
+import {
+  Calendar,
+  History,
+  LayoutGrid,
+  MapPin,
+  PencilLine,
+  Search,
+} from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import { useMountains } from '../context/MountainsContext'
 import { JournalDetailModal } from './JournalDetailModal'
+import { JournalWriteModal } from './JournalWriteModal'
 import { MOUNTAIN_FILTER_REGIONS } from '../data/mountains'
 
 function formatDate(iso) {
@@ -97,9 +106,11 @@ function JournalCardContent({ m, variant }) {
 
 export function ReviewList() {
   const { mountains: allMountains, loading, error, source } = useMountains()
+  const { isAuthorized } = useAuth()
   const [query, setQuery] = useState('')
   const [regionId, setRegionId] = useState('all')
   const [detailMountain, setDetailMountain] = useState(null)
+  const [writeOpen, setWriteOpen] = useState(false)
   const [viewMode, setViewMode] = useState('grid')
 
   const filtered = useMemo(() => {
@@ -125,22 +136,37 @@ export function ReviewList() {
         mountain={detailMountain}
         onClose={() => setDetailMountain(null)}
       />
+      <JournalWriteModal open={writeOpen} onClose={() => setWriteOpen(false)} />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-8 max-w-2xl">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-forest-600">
-            Journal
-          </p>
-          <h2
-            id="journal-heading"
-            className="text-3xl font-bold tracking-tight text-forest-900 sm:text-4xl"
-          >
-            정복기
-          </h2>
-          <p className="mt-3 text-base leading-relaxed text-forest-800/85">
-            오른 산의 풍경과 그날의 기분을 짧게 남긴 기록입니다. 카드를 누르면 상세 정보를
-            볼 수 있어요. 타임라인 보기에서는 등반일 기준으로 과거부터 최근 순으로 정렬됩니다.
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-forest-600">
+              Journal
+            </p>
+            <h2
+              id="journal-heading"
+              className="text-3xl font-bold tracking-tight text-forest-900 sm:text-4xl"
+            >
+              정복기
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-forest-800/85">
+              오른 산의 풍경과 그날의 기분을 짧게 남긴 기록입니다. 카드를 누르면 상세 정보를
+              볼 수 있어요. 타임라인 보기에서는 등반일 기준으로 과거부터 최근 순으로 정렬됩니다.
+            </p>
+          </div>
+
+          {isAuthorized ? (
+            <button
+              type="button"
+              onClick={() => setWriteOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              title="허용된 사용자에게만 표시되는 글쓰기 버튼"
+            >
+              <PencilLine className="size-4" aria-hidden />
+              글쓰기
+            </button>
+          ) : null}
         </div>
 
         <div className="mb-8 flex flex-col gap-4">
@@ -234,8 +260,7 @@ export function ReviewList() {
 
           {error && source === 'local-seed-fallback' ? (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              Firestore에 연결하지 못해 로컬 샘플 데이터를 표시합니다. (
-              {error})
+              Firestore에 연결하지 못해 로컬 샘플 데이터를 표시합니다. ({error})
             </p>
           ) : null}
         </div>

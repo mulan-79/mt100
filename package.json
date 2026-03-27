@@ -8,7 +8,12 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "seed:firestore": "node scripts/seed-firestore.mjs"
+    "seed:firestore": "node scripts/seed-firestore.mjs",
+    "sync:firebase-rules": "node scripts/sync-firebase-security-rules.mjs",
+    "deploy:firebase-rules": "node scripts/deploy-firebase-rules.mjs",
+    "firebase:login": "npx firebase-tools login",
+    "firebase:login:ci": "npx firebase-tools login:ci",
+    "firebase:open:auth-settings": "start https://console.firebase.google.com/project/mt100-397c1/authentication/settings"
   },
   "dependencies": {
     "firebase": "^12.11.0",
@@ -27,6 +32,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "firebase-tools": "^14.0.0",
     "globals": "^17.4.0",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.1"

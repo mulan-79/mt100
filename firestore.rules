@@ -7,5 +7,26 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+
+    // 사용자 정복기 글: 허용 이메일만 생성 (목록은 authorizedUsers.json → npm run sync:firebase-rules)
+    match /journal_posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ['rainym002@gmail.com', 'jurio84@gmail.com']
+        && request.resource.data.keys().hasOnly(['title', 'content', 'date', 'userEmail', 'imageUrl'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 10000
+        && request.resource.data.date is string
+        && request.resource.data.userEmail is string
+        && request.resource.data.userEmail.lower() == request.auth.token.email.lower()
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() > 0;
+      allow update, delete: if false;
+    }
   }
 }

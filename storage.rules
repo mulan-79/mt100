@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // journalPostsFirestore.js 경로: journal-images/{uid}/...
+    match /journal-images/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ['rainym002@gmail.com', 'jurio84@gmail.com'];
+    }
+  }
+}
