@@ -98,13 +98,13 @@ export const mountains = [
     region: '충청',
     planned: true,
     image:
-      'https://images.unsplash.com/photo-1511497584787-3d1b2c5c0e0e?w=800&q=80',
+      'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=800&q=80&auto=format&fit=crop',
     weather:
       '등산 예정 — 계곡·숲 구간은 습도가 높을 수 있어 여름 장마철 우산·방수 준비를 권장합니다.',
     duration: '당일 왕복 위주로 4~7시간 전후가 많습니다(코스별 상이).',
     gallery: [
       {
-        src: 'https://images.unsplash.com/photo-1511497584787-3d1b2c5c0e0e?w=1200&q=80',
+        src: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=1200&q=80&auto=format&fit=crop',
         alt: '속리산 숲길',
       },
     ],
