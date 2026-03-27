@@ -14,26 +14,6 @@ export function getMountainChallengeProgress(mountainsList) {
   return { completed, total, percent }
 }
 
-/** @param {Array} mountainsList */
-export function getRecommendedPendingPeaks(mountainsList, limit = 3) {
-  const list = mountainsList ?? []
-  return [...list]
-    .filter((m) => m.status === 'pending')
-    .sort((a, b) => a.difficulty - b.difficulty)
-    .slice(0, limit)
-}
-
-export function getDifficultyLabel(level) {
-  const map = {
-    1: '입문',
-    2: '쉬움',
-    3: '보통',
-    4: '어려움',
-    5: '상급',
-  }
-  return map[level] ?? '보통'
-}
-
 export const MOUNTAIN_FILTER_REGIONS = [
   { id: 'all', label: '전체' },
   { id: '강원', label: '강원' },
