@@ -116,18 +116,19 @@ export function ReviewList() {
         ) : (
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((m) => (
-              <li key={m.id}>
+              <li key={m.id} className="min-h-0">
                 <button
                   type="button"
                   onClick={() => setDetailMountain(m)}
-                  className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 text-left shadow-sm transition hover:border-forest-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600"
+                  className="group flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 text-left shadow-sm transition hover:border-forest-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-forest-200">
+                  <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-forest-200">
                     <img
                       src={m.image}
                       alt={m.imageAlt ?? `${m.name} 풍경 사진`}
-                      className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.03]"
                       loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-forest-900/50 to-transparent" />
                     <span className="absolute right-3 top-3 rounded-md bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">

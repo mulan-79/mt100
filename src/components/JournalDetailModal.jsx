@@ -134,13 +134,19 @@ export function JournalDetailModal({ mountain, onClose }) {
             </div>
             <ul className="grid gap-3 sm:grid-cols-2">
               {gallery.map((item, i) => (
-                <li key={`${item.src}-${i}`} className="overflow-hidden rounded-xl border border-forest-200 bg-forest-100 shadow-sm">
-                  <img
-                    src={item.src}
-                    alt={item.alt ?? `${mountain.name} 사진 ${i + 1}`}
-                    className="aspect-[4/3] w-full object-cover"
-                    loading="lazy"
-                  />
+                <li
+                  key={`${item.src}-${i}`}
+                  className="overflow-hidden rounded-xl border border-forest-200 bg-forest-100 shadow-sm"
+                >
+                  <div className="relative aspect-[4/3] w-full bg-forest-200">
+                    <img
+                      src={item.src}
+                      alt={item.alt ?? `${mountain.name} 사진 ${i + 1}`}
+                      className="absolute inset-0 h-full w-full object-cover object-center"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
                 </li>
               ))}
             </ul>
