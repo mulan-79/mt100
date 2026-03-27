@@ -29,3 +29,16 @@ body {
 #root {
   min-height: 100dvh;
 }
+
+@keyframes progress-bar-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.progress-bar-shimmer {
+  animation: progress-bar-shimmer 2.8s ease-in-out infinite;
+}

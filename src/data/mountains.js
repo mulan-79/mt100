@@ -2,6 +2,16 @@
  * 정복기 카드용 명산 데이터
  * planned: true 이면 날짜·소감 대신 «등산예정»만 표시
  */
+export const MOUNTAIN_CHALLENGE_TOTAL = 100
+
+/** 완료: planned 가 아닌 항목 수 / 명산 100 목표 */
+export function getMountainChallengeProgress() {
+  const completed = mountains.filter((m) => !m.planned).length
+  const total = MOUNTAIN_CHALLENGE_TOTAL
+  const percent = Math.min(100, Math.round((completed / total) * 100))
+  return { completed, total, percent }
+}
+
 export const mountains = [
   {
     id: 'hallasan',
