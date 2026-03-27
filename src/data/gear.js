@@ -108,7 +108,3 @@ export function getStaticGearFallback() {
     isSample: true,
   }))
 }
-
-export function isValidGearCategory(value) {
-  return GEAR_FIRESTORE_CATEGORIES.includes(value)
-}
