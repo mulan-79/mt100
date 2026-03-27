@@ -41,7 +41,7 @@ export function ReviewList() {
                 <div className="relative aspect-[4/3] overflow-hidden bg-forest-200">
                   <img
                     src={m.image}
-                    alt={`${m.name} 풍경 사진`}
+                    alt={m.imageAlt ?? `${m.name} 풍경 사진`}
                     className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
                     loading="lazy"
                   />
@@ -54,13 +54,22 @@ export function ReviewList() {
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-                  <p className="flex items-center gap-2 text-sm text-forest-700/90">
-                    <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
-                    <time dateTime={m.date}>{formatDate(m.date)}</time>
-                  </p>
-                  <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-forest-800/95">
-                    {m.reflection}
-                  </p>
+                  {m.planned ? (
+                    <p className="flex items-center gap-2 text-sm font-medium text-forest-600">
+                      <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
+                      등산예정
+                    </p>
+                  ) : (
+                    <>
+                      <p className="flex items-center gap-2 text-sm text-forest-700/90">
+                        <Calendar className="size-4 shrink-0 text-forest-500" aria-hidden />
+                        <time dateTime={m.date}>{formatDate(m.date)}</time>
+                      </p>
+                      <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-forest-800/95">
+                        {m.reflection}
+                      </p>
+                    </>
+                  )}
                 </div>
               </article>
             </li>
