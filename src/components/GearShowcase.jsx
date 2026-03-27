@@ -29,7 +29,7 @@ function authorCaption(email) {
 }
 
 export function GearShowcase() {
-  const { isAuthorized } = useAuth()
+  const { user, isAuthorized, isEnabled } = useAuth()
   const [active, setActive] = useState(gearCategories[0].id)
   const [remoteGears, setRemoteGears] = useState([])
   const [loadError, setLoadError] = useState(null)
@@ -76,6 +76,16 @@ export function GearShowcase() {
   )
 
   const openAdd = () => {
+    if (!isAuthorized) {
+      window.alert('장비를 등록할 수 있는 권한이 없습니다. 허용된 Google 계정으로 로그인해 주세요.')
+      return
+    }
+    if (!firebaseOn) {
+      window.alert(
+        'Firebase가 연결되지 않았습니다. 배포 환경의 VITE_FIREBASE_* 환경 변수를 확인해 주세요.',
+      )
+      return
+    }
     setEditingGear(null)
     setFormOpen(true)
   }
@@ -141,13 +151,30 @@ export function GearShowcase() {
             ) : null}
           </div>
 
-          {isAuthorized && firebaseOn ? (
+          {isEnabled ? (
             <button
               type="button"
-              onClick={openAdd}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-forest-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-700"
+              onClick={() => {
+                if (!user) {
+                  window.alert(
+                    '상단 메뉴에서 구글 로그인한 뒤, 허용된 계정이면 장비를 등록할 수 있습니다.',
+                  )
+                  return
+                }
+                openAdd()
+              }}
+              title={
+                !user
+                  ? '로그인 후 이용할 수 있습니다.'
+                  : !isAuthorized
+                    ? '허용된 작성 권한 계정으로 로그인해 주세요.'
+                    : !firebaseOn
+                      ? 'Firebase 설정(VITE_FIREBASE_*)을 확인해 주세요.'
+                      : '새 장비 등록'
+              }
+              className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-forest-300 bg-white px-4 py-2.5 text-sm font-semibold text-forest-800 shadow-sm transition hover:border-forest-500 hover:bg-forest-50 hover:text-forest-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600 sm:w-auto"
             >
-              <Plus className="size-4" aria-hidden />
+              <Plus className="size-4 text-forest-600" aria-hidden />
               장비 추가하기
             </button>
           ) : null}
@@ -236,7 +263,7 @@ export function GearShowcase() {
                         <p className="mt-3 text-xs text-forest-400">샘플 데이터</p>
                       ) : null}
 
-                      {isAuthorized && firebaseOn && !item.isSample ? (
+                      {isAuthorized && !item.isSample ? (
                         <div className="mt-4 flex flex-wrap gap-2 border-t border-forest-100 pt-4">
                           <button
                             type="button"
