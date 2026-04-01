@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronDown, Compass, Mountain } from 'lucide-react'
+import { ChevronDown, Compass } from 'lucide-react'
 
 export function Hero() {
   return (
@@ -48,20 +48,15 @@ export function Hero() {
         </div>
 
         <div className="relative flex flex-1 justify-center lg:justify-end">
-          <div className="relative aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl border border-forest-200/80 bg-gradient-to-b from-forest-100 to-forest-200/90 shadow-xl">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,rgba(45,106,79,0.25),transparent_55%)]" />
-            <div className="relative flex h-full min-h-[220px] flex-col items-center justify-center gap-4 p-8 sm:min-h-[260px]">
-              <Mountain
-                className="size-24 text-forest-600 sm:size-28"
-                strokeWidth={1.25}
-                aria-hidden
-              />
-              <p className="text-center text-sm font-medium text-forest-800/90">
-                정상까지의 길,
-                <br />
-                오늘도 한 걸음
-              </p>
-            </div>
+          <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-forest-200/80 bg-[#f5f2eb] shadow-xl">
+            <img
+              src="/images/bac-ajae-club-hero.png"
+              alt="BAC 아재산악회 로고"
+              className="h-full w-full object-contain object-center"
+              width={800}
+              height={800}
+              decoding="async"
+            />
           </div>
         </div>
       </div>
