@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Calendar,
   Car,
@@ -434,11 +435,33 @@ const faqItems = [
 
 export function FAQ() {
   const baseId = useId()
+  const location = useLocation()
   const [openId, setOpenId] = useState(null)
 
   const toggle = (id) => {
     setOpenId((prev) => (prev === id ? null : id))
   }
+
+  useEffect(() => {
+    const raw = location.hash.replace(/^#/, '')
+    if (!raw || !faqItems.some((i) => i.id === raw)) return
+    let cancelled = false
+    const tid = window.setTimeout(() => {
+      if (cancelled) return
+      setOpenId(raw)
+      requestAnimationFrame(() => {
+        if (cancelled) return
+        document.getElementById(raw)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      })
+    }, 0)
+    return () => {
+      cancelled = true
+      clearTimeout(tid)
+    }
+  }, [location.hash, location.pathname])
 
   return (
     <section
@@ -472,7 +495,8 @@ export function FAQ() {
             return (
               <div
                 key={item.id}
-                className="overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 shadow-sm transition hover:border-forest-300"
+                id={item.id}
+                className="scroll-mt-24 overflow-hidden rounded-2xl border border-forest-200 bg-forest-50/80 shadow-sm transition hover:border-forest-300"
               >
                 <h3 className="text-base font-semibold leading-snug text-forest-900">
                   <button

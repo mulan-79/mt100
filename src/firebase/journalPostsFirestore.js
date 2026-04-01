@@ -33,7 +33,7 @@ function normalizeDate(value) {
 
 /**
  * journal_posts 문서 → 정복기 카드용 산 객체 형태
- * Firestore 필드: title, content, date, userEmail, imageUrl, status(선택)
+ * Firestore 필드: title, content, date, userEmail, imageUrl, dayGear, status(선택)
  */
 export function docJournalToMountain(docSnap) {
   const d = docSnap.data()
@@ -50,6 +50,7 @@ export function docJournalToMountain(docSnap) {
     image: typeof d.imageUrl === 'string' ? d.imageUrl : '',
     reflection: typeof d.content === 'string' ? d.content : '',
     userEmail: typeof d.userEmail === 'string' ? d.userEmail : '',
+    dayGear: typeof d.dayGear === 'string' ? d.dayGear : '',
     isJournalPost: true,
     weather: '',
     duration: '',
@@ -84,9 +85,15 @@ export function subscribeJournalPosts(onData, onError) {
 /**
  * 이미지 업로드 후 Firestore에 정복기 문서 추가.
  * userEmail은 현재 로그인 사용자 이메일로만 설정됩니다.
- * @param {{ title: string, content: string, date: string, imageFile: File }} payload
+ * @param {{ title: string, content: string, date: string, dayGear?: string, imageFile: File }} payload
  */
-export async function createJournalPost({ title, content, date, imageFile }) {
+export async function createJournalPost({
+  title,
+  content,
+  date,
+  dayGear = '',
+  imageFile,
+}) {
   const auth = getFirebaseAuth()
   const user = auth?.currentUser
   if (!user?.email) throw new Error('로그인이 필요합니다.')
@@ -97,8 +104,12 @@ export async function createJournalPost({ title, content, date, imageFile }) {
   const t = String(title ?? '').trim()
   const c = String(content ?? '').trim()
   const d = String(date ?? '').trim()
+  const g = String(dayGear ?? '').trim()
   if (!t || !c || !d) {
     throw new Error('산 이름, 소감, 등산 날짜를 모두 입력해 주세요.')
+  }
+  if (g.length > 3000) {
+    throw new Error('당일 장비는 3,000자 이내로 입력해 주세요.')
   }
   if (!imageFile || !(imageFile instanceof Blob)) {
     throw new Error('사진을 선택해 주세요.')
@@ -124,5 +135,6 @@ export async function createJournalPost({ title, content, date, imageFile }) {
     date: d,
     userEmail,
     imageUrl,
+    dayGear: g,
   })
 }

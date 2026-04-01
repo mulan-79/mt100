@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import {
+  Backpack,
   Calendar,
   Clock,
   CloudSun,
@@ -123,6 +124,17 @@ export function JournalDetailModal({ mountain, onClose }) {
                 {mountain.duration}
               </p>
             </div>
+            {mountain.isJournalPost && mountain.dayGear?.trim() ? (
+              <div className="rounded-xl border border-forest-200 bg-white p-4 shadow-sm sm:col-span-2">
+                <div className="mb-2 flex items-center gap-2 text-forest-600">
+                  <Backpack className="size-5 shrink-0" aria-hidden />
+                  <span className="text-sm font-semibold">당일 장비</span>
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-forest-800/95">
+                  {mountain.dayGear}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {mountain.status === 'completed' && mountain.reflection ? (

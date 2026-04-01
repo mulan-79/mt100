@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronDown, Compass } from 'lucide-react'
+import { CalendarRange, ChevronDown, Compass } from 'lucide-react'
 
 export function Hero() {
   return (
@@ -43,6 +43,13 @@ export function Hero() {
               className="inline-flex items-center justify-center rounded-xl border border-earth-600/40 bg-white/60 px-5 py-3 text-sm font-semibold text-earth-800 transition hover:bg-white"
             >
               명산 100 소개
+            </Link>
+            <Link
+              to="/#faq-3year-plan"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-forest-600/35 bg-white/60 px-5 py-3 text-sm font-semibold text-forest-800 transition hover:bg-white"
+            >
+              <CalendarRange className="size-4 shrink-0 text-forest-600" aria-hidden />
+              정복 3년 계획
             </Link>
           </div>
         </div>

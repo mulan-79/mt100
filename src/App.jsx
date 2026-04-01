@@ -8,10 +8,11 @@ import { JournalPage } from './pages/JournalPage'
 import { QAPage } from './pages/QAPage'
 
 function ScrollToTop() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   useEffect(() => {
+    if (hash) return
     window.scrollTo(0, 0)
-  }, [pathname])
+  }, [pathname, hash])
   return null
 }
 

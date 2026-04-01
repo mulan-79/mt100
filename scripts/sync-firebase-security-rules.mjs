@@ -71,7 +71,7 @@ ${commentsSubcollectionRules}
       allow create: if request.auth != null
         && request.auth.token.email != null
         && request.auth.token.email.lower() in ${emailsInClause}
-        && request.resource.data.keys().hasOnly(['title', 'content', 'date', 'userEmail', 'imageUrl'])
+        && request.resource.data.keys().hasOnly(['title', 'content', 'date', 'userEmail', 'imageUrl', 'dayGear'])
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 200
@@ -82,7 +82,9 @@ ${commentsSubcollectionRules}
         && request.resource.data.userEmail is string
         && request.resource.data.userEmail.lower() == request.auth.token.email.lower()
         && request.resource.data.imageUrl is string
-        && request.resource.data.imageUrl.size() > 0;
+        && request.resource.data.imageUrl.size() > 0
+        && request.resource.data.dayGear is string
+        && request.resource.data.dayGear.size() <= 3000;
       allow update, delete: if false;
 ${commentsSubcollectionRules}
     }

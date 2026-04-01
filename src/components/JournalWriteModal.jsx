@@ -10,6 +10,7 @@ export function JournalWriteModal({ open, onClose }) {
   const closeRef = useRef(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [dayGear, setDayGear] = useState('')
   const [date, setDate] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -38,6 +39,7 @@ export function JournalWriteModal({ open, onClose }) {
     if (!open) {
       setTitle('')
       setContent('')
+      setDayGear('')
       setDate('')
       setImageFile(null)
       setFormError(null)
@@ -168,6 +170,28 @@ export function JournalWriteModal({ open, onClose }) {
               placeholder="그날의 날씨, 코스, 기분을 남겨 보세요."
               className="w-full resize-y rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-50"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="journal-day-gear"
+              className="mb-1.5 block text-sm font-medium text-forest-800"
+            >
+              당일 장비
+            </label>
+            <textarea
+              id="journal-day-gear"
+              value={dayGear}
+              onChange={(e) => setDayGear(e.target.value)}
+              rows={3}
+              maxLength={3000}
+              disabled={submitting}
+              placeholder="예: 폴·접지스틱, 경량 패딩, 보온병 500ml, 각반…"
+              className="w-full resize-y rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-50"
+            />
+            <p className="mt-1 text-xs text-forest-500">
+              비워 두어도 저장됩니다. ({dayGear.length}/3000)
+            </p>
           </div>
 
           <div>
