@@ -129,9 +129,15 @@ export function ReviewList() {
   const [viewMode, setViewMode] = useState('grid')
   const [journalAuthorId, setJournalAuthorId] = useState('all')
 
+  /** 정복기 목록에서는 등산예정(pending) 항목을 표시하지 않음 */
+  const mountainsForJournal = useMemo(
+    () => allMountains.filter((m) => m.status !== 'pending'),
+    [allMountains],
+  )
+
   const filtered = useMemo(() => {
     const q = normalizeForSearch(query)
-    return allMountains.filter((m) => {
+    return mountainsForJournal.filter((m) => {
       const nameOk =
         q === '' || normalizeForSearch(m.name).includes(q)
       const regionOk =
@@ -142,7 +148,7 @@ export function ReviewList() {
         normalizeEmail(m.userEmail) === journalAuthorId
       return nameOk && regionOk && authorOk
     })
-  }, [query, regionId, journalAuthorId, allMountains])
+  }, [query, regionId, journalAuthorId, mountainsForJournal])
 
   const timelineList = useMemo(() => sortForTimeline(filtered), [filtered])
 
@@ -308,8 +314,7 @@ export function ReviewList() {
 
           {viewMode === 'timeline' ? (
             <p className="text-xs text-forest-600">
-              <strong>타임라인</strong>: 완료 산은 등반일 <strong>오름차순</strong>(과거 → 최근),
-              그 다음 <strong>등산 예정</strong> 산은 난이도 순입니다.
+              <strong>타임라인</strong>: 기록은 등반일 <strong>오름차순</strong>(과거 → 최근)입니다.
             </p>
           ) : null}
 

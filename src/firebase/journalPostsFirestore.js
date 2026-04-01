@@ -33,16 +33,18 @@ function normalizeDate(value) {
 
 /**
  * journal_posts 문서 → 정복기 카드용 산 객체 형태
- * Firestore 필드: title, content, date, userEmail, imageUrl
+ * Firestore 필드: title, content, date, userEmail, imageUrl, status(선택)
  */
 export function docJournalToMountain(docSnap) {
   const d = docSnap.data()
   if (!d || typeof d.title !== 'string') return null
+  const status =
+    d.status === 'pending' ? 'pending' : 'completed'
   return {
     id: docSnap.id,
     name: d.title,
     region: '기록',
-    status: 'completed',
+    status,
     difficulty: 1,
     date: normalizeDate(d.date) ?? '',
     image: typeof d.imageUrl === 'string' ? d.imageUrl : '',
