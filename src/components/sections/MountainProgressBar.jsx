@@ -1,10 +1,14 @@
+import { useMemo } from 'react'
 import { Mountain } from 'lucide-react'
 import { useMountains } from '../../context/MountainsContext'
-import { getMountainChallengeProgress } from '../../data/mountains'
+import { getHomeMountainChallengeProgress } from '../../data/mountains'
 
 export function MountainProgressBar() {
   const { mountains, loading } = useMountains()
-  const { completed, total, percent } = getMountainChallengeProgress(mountains)
+  const { completed, total, percent } = useMemo(
+    () => getHomeMountainChallengeProgress(mountains),
+    [mountains],
+  )
 
   return (
     <section
@@ -25,7 +29,7 @@ export function MountainProgressBar() {
                 명산 100 정복 진행률
               </h2>
               <p className="text-xs text-forest-600/90 sm:text-sm">
-                블랙야크 명산 100 — 정상을 밟은 산만 집계해요
+                명산 100 명단과 이름이 같은 기록만, 산마다 한 번만 집계해요
               </p>
             </div>
           </div>
