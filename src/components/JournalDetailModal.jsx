@@ -58,7 +58,16 @@ export function JournalDetailModal({ mountain, onClose, onEditRequest }) {
   const commentCollection = mountain.isJournalPost ? 'journal_posts' : 'mountains'
   const commentParentId = mountain.id != null && mountain.id !== '' ? String(mountain.id) : ''
 
-  const gallery = mountain.gallery ?? [{ src: mountain.image, alt: mountain.imageAlt ?? mountain.name }]
+  /** journal_posts는 Firestore에서 gallery: [] 로 오므로, 비어 있으면 imageUrl(→ image)로 폴백 */
+  const gallery = (() => {
+    const fromDoc = Array.isArray(mountain.gallery) ? mountain.gallery : []
+    if (fromDoc.length > 0) return fromDoc
+    const src = mountain.image
+    if (typeof src === 'string' && src.trim()) {
+      return [{ src: src.trim(), alt: mountain.imageAlt ?? mountain.name }]
+    }
+    return []
+  })()
 
   const canEditJournal =
     mountain.isJournalPost &&
@@ -133,6 +142,22 @@ export function JournalDetailModal({ mountain, onClose, onEditRequest }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-10 sm:px-6">
+          {gallery[0]?.src ? (
+            <div className="mb-5 overflow-hidden rounded-2xl border border-forest-200 bg-forest-100 shadow-sm">
+              <div className="relative aspect-[16/10] w-full max-h-[min(52vh,420px)] bg-forest-200 sm:aspect-[2/1]">
+                <img
+                  src={gallery[0].src}
+                  alt={
+                    gallery[0].alt ?? `${mountain.name} 대표 사진`
+                  }
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+            </div>
+          ) : null}
+
           {mountain.isJournalPost ? (
             <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/40 p-4 shadow-sm ring-1 ring-emerald-100/80">
               <div className="mb-2 flex items-center gap-2 text-emerald-900">
@@ -197,30 +222,38 @@ export function JournalDetailModal({ mountain, onClose, onEditRequest }) {
             parentId={commentParentId}
           />
 
-          <div className="mt-6">
-            <div className="mb-3 flex items-center gap-2 text-forest-800">
-              <Images className="size-5 text-forest-600" aria-hidden />
-              <span className="text-sm font-semibold">사진 갤러리</span>
+          {gallery.length > 1 ? (
+            <div className="mt-6">
+              <div className="mb-3 flex items-center gap-2 text-forest-800">
+                <Images className="size-5 text-forest-600" aria-hidden />
+                <span className="text-sm font-semibold">추가 사진</span>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {gallery.slice(1).map((item, i) => (
+                  <li
+                    key={`${item.src}-${i}`}
+                    className="overflow-hidden rounded-xl border border-forest-200 bg-forest-100 shadow-sm"
+                  >
+                    <div className="relative aspect-[4/3] w-full bg-forest-200">
+                      <img
+                        src={item.src}
+                        alt={item.alt ?? `${mountain.name} 사진 ${i + 2}`}
+                        className="absolute inset-0 h-full w-full object-cover object-center"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {gallery.map((item, i) => (
-                <li
-                  key={`${item.src}-${i}`}
-                  className="overflow-hidden rounded-xl border border-forest-200 bg-forest-100 shadow-sm"
-                >
-                  <div className="relative aspect-[4/3] w-full bg-forest-200">
-                    <img
-                      src={item.src}
-                      alt={item.alt ?? `${mountain.name} 사진 ${i + 1}`}
-                      className="absolute inset-0 h-full w-full object-cover object-center"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          ) : gallery.length === 0 ? (
+            <div className="mt-6">
+              <p className="rounded-xl border border-dashed border-forest-300 bg-white/60 px-4 py-8 text-center text-sm text-forest-500">
+                등록된 사진이 없습니다.
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
