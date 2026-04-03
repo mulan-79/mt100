@@ -1,5 +1,5 @@
 /**
- * 정복기 도우미 (Firestore에서 받은 배열을 인자로 사용)
+ * 정복기 도우미 (Firestore에서 받은 배열을 사용)
  * status: 'completed' | 'pending'
  * difficulty: 1(쉬움) ~ 5(어려움)
  */
@@ -33,14 +33,23 @@ export function normalizeMountainLabel(value) {
 }
 
 /**
- * 명산 100 달성도: 공식 명단과 이름이 일치하는 해당 작성자 정복기만, 산(id)당 1회 집계.
- * @param {Array} mountainsList — MountainsContext 병합 배열
- * @param {string} authorEmail — 작성자 이메일 (대소문자 무관)
+ * @param {Array} mountainsList — 병합 배열 (정복기 + 명단)
+ * @param {Array} officialPeaksList — 집계 대상 명단 (id, name)
+ * @param {string} authorEmail
+ * @param {number | null} totalDenominator — 고정 분모(명산100=100). null이면 명단 고유 id 개수
  */
-export function getMountainChallengeProgressForEmail(mountainsList, authorEmail) {
-  const list = mountainsList ?? []
-  const official = list.filter((m) => !m.isJournalPost)
-  /** @type {Map<string, string>} 정규화 이름 → 공식 산 id (동일 이름이 여러 id면 첫 id만 사용) */
+function computeChallengeProgressForOfficialList(
+  mountainsList,
+  officialPeaksList,
+  authorEmail,
+  totalDenominator,
+) {
+  const official = officialPeaksList ?? []
+  const validIds = new Set()
+  for (const m of official) {
+    if (m?.id != null && m.id !== '') validIds.add(String(m.id))
+  }
+
   const nameKeyToId = new Map()
   for (const m of official) {
     if (m?.id == null || m.id === '' || typeof m.name !== 'string') continue
@@ -49,27 +58,82 @@ export function getMountainChallengeProgressForEmail(mountainsList, authorEmail)
     nameKeyToId.set(key, String(m.id))
   }
 
-  const journals = filterJournalMountainsByEmail(list, authorEmail)
+  const journals = filterJournalMountainsByEmail(mountainsList, authorEmail)
   const conqueredIds = new Set()
   for (const j of journals) {
     if (typeof j.name !== 'string') continue
     const id = nameKeyToId.get(normalizeMountainLabel(j.name))
-    if (id) conqueredIds.add(id)
+    if (id && validIds.has(id)) conqueredIds.add(id)
   }
 
   const completed = conqueredIds.size
-  const total = MOUNTAIN_CHALLENGE_TOTAL
-  const percent = Math.min(100, Math.round((completed / total) * 100))
+  const total =
+    typeof totalDenominator === 'number' && totalDenominator > 0
+      ? totalDenominator
+      : validIds.size
+  const percent =
+    total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0
   return { completed, total, percent }
 }
 
 /**
- * 메인 화면 정복률 — {@link HOME_PROGRESS_JOURNAL_EMAIL} 기준 (로직은 작성자별과 동일)
+ * 명산 100 달성도: `mountains` 명단과 이름 일치 + 산(id)당 1회. 분모 100 고정.
+ * @param {Array} mountainsList — MountainsContext `mountains`
+ * @param {string} authorEmail
+ */
+export function getMountainChallengeProgressForEmail(mountainsList, authorEmail) {
+  const list = mountainsList ?? []
+  const official = list.filter((m) => !m.isJournalPost)
+  return computeChallengeProgressForOfficialList(
+    list,
+    official,
+    authorEmail,
+    MOUNTAIN_CHALLENGE_TOTAL,
+  )
+}
+
+/**
+ * 명산 100+ 달성도: `mountains_100_plus` 명단과 동일 로직. 분모 = 명단 산 개수(고유 id).
+ * @param {Array} mountainsList — MountainsContext `mountains`
+ * @param {Array} officialPlusList — `mountains100Plus`
+ * @param {string} authorEmail
+ */
+export function getMountainChallengePlusProgressForEmail(
+  mountainsList,
+  officialPlusList,
+  authorEmail,
+) {
+  return computeChallengeProgressForOfficialList(
+    mountainsList,
+    officialPlusList ?? [],
+    authorEmail,
+    null,
+  )
+}
+
+/**
+ * 메인 화면 명산 100 정복률
  * @param {Array} mountainsList
  */
 export function getHomeMountainChallengeProgress(mountainsList) {
   return getMountainChallengeProgressForEmail(
     mountainsList,
+    HOME_PROGRESS_JOURNAL_EMAIL,
+  )
+}
+
+/**
+ * 메인 화면 명산 100+ 정복률
+ * @param {Array} mountainsList
+ * @param {Array} officialPlusList
+ */
+export function getHomeMountainChallengePlusProgress(
+  mountainsList,
+  officialPlusList,
+) {
+  return getMountainChallengePlusProgressForEmail(
+    mountainsList,
+    officialPlusList,
     HOME_PROGRESS_JOURNAL_EMAIL,
   )
 }

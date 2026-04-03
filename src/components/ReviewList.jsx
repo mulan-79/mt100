@@ -6,6 +6,7 @@ import {
   LayoutGrid,
   MapPin,
   Mountain,
+  MountainSnow,
   PencilLine,
   Search,
 } from 'lucide-react'
@@ -16,6 +17,7 @@ import { JournalEditModal } from './JournalEditModal'
 import { JournalWriteModal } from './JournalWriteModal'
 import {
   MOUNTAIN_FILTER_REGIONS,
+  getMountainChallengePlusProgressForEmail,
   getMountainChallengeProgressForEmail,
 } from '../data/mountains'
 import {
@@ -135,7 +137,13 @@ function JournalCardContent({ m, variant }) {
 }
 
 export function ReviewList() {
-  const { mountains: allMountains, loading, error, source } = useMountains()
+  const {
+    mountains: allMountains,
+    mountains100Plus,
+    loading,
+    error,
+    source,
+  } = useMountains()
   const { isAuthorized } = useAuth()
   const [query, setQuery] = useState('')
   const [regionId, setRegionId] = useState('all')
@@ -172,6 +180,15 @@ export function ReviewList() {
     if (!isAuthorized || journalAuthorId === 'all') return null
     return getMountainChallengeProgressForEmail(allMountains, journalAuthorId)
   }, [allMountains, isAuthorized, journalAuthorId])
+
+  const authorProgressPlus = useMemo(() => {
+    if (!isAuthorized || journalAuthorId === 'all') return null
+    return getMountainChallengePlusProgressForEmail(
+      allMountains,
+      mountains100Plus,
+      journalAuthorId,
+    )
+  }, [allMountains, mountains100Plus, isAuthorized, journalAuthorId])
 
   const selectedAuthorLabel =
     journalAuthorId === 'all'
@@ -344,53 +361,119 @@ export function ReviewList() {
             </div>
           </div>
 
-          {isAuthorized && journalAuthorId !== 'all' && authorProgress ? (
-            <div
-              className="w-full rounded-2xl border border-forest-200 bg-gradient-to-b from-forest-50/90 to-white px-4 py-4 shadow-sm sm:px-5"
-              role="region"
-              aria-label={`${selectedAuthorLabel} 명산 100 달성도`}
-            >
-              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-200/80">
-                    <Mountain className="size-4" aria-hidden />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-forest-900">
-                      {selectedAuthorLabel}님의 명산 100 달성도
-                    </p>
-                    <p className="text-xs text-forest-600/90">
-                      메인과 동일 — 명산 100 명단과 이름이 같은 기록만, 산마다 한
-                      번만 집계해요
-                    </p>
+          {isAuthorized &&
+          journalAuthorId !== 'all' &&
+          authorProgress &&
+          authorProgressPlus ? (
+            <div className="flex w-full flex-col gap-3">
+              <div
+                className="rounded-2xl border border-forest-200 bg-gradient-to-b from-forest-50/90 to-white px-4 py-4 shadow-sm sm:px-5"
+                role="region"
+                aria-label={`${selectedAuthorLabel} 명산 100 달성도`}
+              >
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-200/80">
+                      <Mountain className="size-4" aria-hidden />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-forest-900">
+                        {selectedAuthorLabel}님의 명산 100 달성도
+                      </p>
+                      <p className="text-xs text-forest-600/90">
+                        메인과 동일 — 명산 100 명단과 이름이 같은 기록만, 산마다
+                        한 번만 집계해요
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2 sm:text-right">
+                    <span className="text-xl font-bold tabular-nums text-forest-900 sm:text-2xl">
+                      {loading ? '—' : `${authorProgress.percent}%`}
+                    </span>
+                    <span className="text-sm tabular-nums text-forest-600">
+                      {loading
+                        ? '불러오는 중…'
+                        : `${authorProgress.completed} / ${authorProgress.total} 완료`}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-baseline gap-2 sm:text-right">
-                  <span className="text-xl font-bold tabular-nums text-forest-900 sm:text-2xl">
-                    {loading ? '—' : `${authorProgress.percent}%`}
-                  </span>
-                  <span className="text-sm tabular-nums text-forest-600">
-                    {loading
-                      ? '불러오는 중…'
-                      : `${authorProgress.completed} / ${authorProgress.total} 완료`}
-                  </span>
+                <div
+                  className="relative h-3 overflow-hidden rounded-full bg-forest-200/80 shadow-inner ring-1 ring-forest-300/40 sm:h-4"
+                  role="progressbar"
+                  aria-valuenow={loading ? 0 : authorProgress.percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-emerald-600 via-forest-500 to-emerald-500 transition-[width] duration-700 ease-out motion-reduce:transition-none"
+                    style={{
+                      width: loading ? '0%' : `${authorProgress.percent}%`,
+                    }}
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
+                  </div>
                 </div>
               </div>
+
               <div
-                className="relative h-3 overflow-hidden rounded-full bg-forest-200/80 shadow-inner ring-1 ring-forest-300/40 sm:h-4"
-                role="progressbar"
-                aria-valuenow={loading ? 0 : authorProgress.percent}
-                aria-valuemin={0}
-                aria-valuemax={100}
+                className="rounded-2xl border border-sky-200/80 bg-gradient-to-b from-sky-50/50 to-white px-4 py-4 shadow-sm sm:px-5"
+                role="region"
+                aria-label={`${selectedAuthorLabel} 명산 100+ 달성도`}
               >
-                <div
-                  className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-emerald-600 via-forest-500 to-emerald-500 transition-[width] duration-700 ease-out motion-reduce:transition-none"
-                  style={{
-                    width: loading ? '0%' : `${authorProgress.percent}%`,
-                  }}
-                >
-                  <span className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-700 ring-1 ring-sky-200/80">
+                      <MountainSnow className="size-4" aria-hidden />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-forest-900">
+                        {selectedAuthorLabel}님의 명산 100+ 달성도
+                      </p>
+                      <p className="text-xs text-forest-600/90">
+                        100+ 명단과 이름이 같은 기록만, 산마다 한 번만 집계해요
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2 sm:text-right">
+                    <span className="text-xl font-bold tabular-nums text-forest-900 sm:text-2xl">
+                      {loading
+                        ? '—'
+                        : authorProgressPlus.total === 0
+                          ? '—'
+                          : `${authorProgressPlus.percent}%`}
+                    </span>
+                    <span className="text-sm tabular-nums text-forest-600">
+                      {loading
+                        ? '불러오는 중…'
+                        : authorProgressPlus.total === 0
+                          ? '명단 없음'
+                          : `${authorProgressPlus.completed} / ${authorProgressPlus.total} 완료`}
+                    </span>
+                  </div>
                 </div>
+                {authorProgressPlus.total === 0 && !loading ? (
+                  <p className="text-xs text-forest-500">
+                    <code className="rounded bg-forest-100 px-1">mountains_100_plus</code>
+                    에 산이 등록되면 집계됩니다.
+                  </p>
+                ) : (
+                  <div
+                    className="relative h-3 overflow-hidden rounded-full bg-forest-200/80 shadow-inner ring-1 ring-forest-300/40 sm:h-4"
+                    role="progressbar"
+                    aria-valuenow={loading ? 0 : authorProgressPlus.percent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-500 transition-[width] duration-700 ease-out motion-reduce:transition-none"
+                      style={{
+                        width: loading ? '0%' : `${authorProgressPlus.percent}%`,
+                      }}
+                    >
+                      <span className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : null}

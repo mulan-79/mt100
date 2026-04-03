@@ -11,13 +11,23 @@ import { subscribeJournalPosts } from '../firebase/journalPostsFirestore'
 import {
   seedMountainsFromDefaultsIfEmpty,
   subscribeMountains,
+  subscribeMountains100Plus,
 } from '../firebase/mountainsFirestore'
 
-/** @typedef {{ mountains: object[], loading: boolean, error: string | null, source: string }} MountainsState */
+/**
+ * @typedef {{
+ *   mountains: object[],
+ *   mountains100Plus: object[],
+ *   loading: boolean,
+ *   error: string | null,
+ *   source: string
+ * }} MountainsState
+ */
 
 const MountainsContext = createContext(
   /** @type {MountainsState} */ ({
     mountains: [],
+    mountains100Plus: [],
     loading: true,
     error: null,
     source: 'unknown',
@@ -31,7 +41,11 @@ export function MountainsProvider({ children }) {
     firebaseOn ? [] : MOUNTAIN_SEED_DATA,
   )
   const [journalMountains, setJournalMountains] = useState([])
+  const [mountains100Plus, setMountains100Plus] = useState([])
   const [mountainsReady, setMountainsReady] = useState(() => !firebaseOn)
+  const [mountains100PlusReady, setMountains100PlusReady] = useState(
+    () => !firebaseOn,
+  )
   const [journalReady, setJournalReady] = useState(() => !firebaseOn)
   const [error, setError] = useState(null)
   const [source, setSource] = useState(() => (firebaseOn ? 'unknown' : 'local-seed'))
@@ -42,14 +56,18 @@ export function MountainsProvider({ children }) {
   )
 
   const loading = useMemo(
-    () => (firebaseOn ? !mountainsReady || !journalReady : false),
-    [firebaseOn, mountainsReady, journalReady],
+    () =>
+      firebaseOn
+        ? !mountainsReady || !mountains100PlusReady || !journalReady
+        : false,
+    [firebaseOn, mountainsReady, mountains100PlusReady, journalReady],
   )
 
   useEffect(() => {
     if (!firebaseOn) return undefined
 
     let unsubMountains = () => {}
+    let unsub100Plus = () => {}
     let unsubJournal = () => {}
     let cancelled = false
 
@@ -81,6 +99,20 @@ export function MountainsProvider({ children }) {
         },
       )
 
+      unsub100Plus = subscribeMountains100Plus(
+        (list) => {
+          if (cancelled) return
+          setMountains100Plus(list)
+          setMountains100PlusReady(true)
+        },
+        (err) => {
+          if (cancelled) return
+          console.error('[Firestore mountains_100_plus]', err)
+          setMountains100Plus([])
+          setMountains100PlusReady(true)
+        },
+      )
+
       unsubJournal = subscribeJournalPosts(
         (list) => {
           if (cancelled) return
@@ -99,13 +131,14 @@ export function MountainsProvider({ children }) {
     return () => {
       cancelled = true
       unsubMountains()
+      unsub100Plus()
       unsubJournal()
     }
   }, [firebaseOn])
 
   const value = useMemo(
-    () => ({ mountains, loading, error, source }),
-    [mountains, loading, error, source],
+    () => ({ mountains, mountains100Plus, loading, error, source }),
+    [mountains, mountains100Plus, loading, error, source],
   )
 
   return (

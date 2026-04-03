@@ -12,6 +12,7 @@ import { MOUNTAIN_SEED_DATA } from '../data/mountainsSeed'
 import { getDb } from './config'
 
 const COLLECTION = 'mountains'
+const COLLECTION_100_PLUS = 'mountains_100_plus'
 
 function normalizeDate(value) {
   if (!value) return undefined
@@ -72,13 +73,13 @@ export function mountainToFirestorePayload(mountain) {
  * @param {(err: Error) => void} [onError]
  * @returns {() => void} unsubscribe
  */
-export function subscribeMountains(onData, onError) {
+function subscribeMountainCollection(collectionName, onData, onError) {
   const db = getDb()
   if (!db) {
     onData([])
     return () => {}
   }
-  const q = query(collection(db, COLLECTION))
+  const q = query(collection(db, collectionName))
   return onSnapshot(
     q,
     (snap) => {
@@ -91,6 +92,20 @@ export function subscribeMountains(onData, onError) {
       if (onError) onError(err)
     },
   )
+}
+
+/**
+ * 블랙야크 명산 100 명단 (`mountains`)
+ */
+export function subscribeMountains(onData, onError) {
+  return subscribeMountainCollection(COLLECTION, onData, onError)
+}
+
+/**
+ * 명산 100+ 확장 명단 (`mountains_100_plus`) — 문서 스키마는 `mountains`와 동일
+ */
+export function subscribeMountains100Plus(onData, onError) {
+  return subscribeMountainCollection(COLLECTION_100_PLUS, onData, onError)
 }
 
 /** 컬렉션이 비어 있을 때 시드 데이터 일괄 쓰기 (개발·초기 세팅용) */

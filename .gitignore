@@ -9,6 +9,10 @@ lerna-debug.log*
 
 node_modules
 
+# Firebase Admin 비공개 키 (커밋 금지)
+*-firebase-adminsdk-*.json
+firebase-service-account.json
+
 # 로컬 환경 변수 (Firebase 키 등)
 .env
 .env.*

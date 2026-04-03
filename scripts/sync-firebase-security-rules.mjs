@@ -65,6 +65,12 @@ service cloud.firestore {
 ${commentsSubcollectionRules}
     }
 
+    // 명산 100+ 확장 명단 (스키마는 mountains와 동일, 클라이언트 쓰기 없음)
+    match /mountains_100_plus/{mountainId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // 사용자 정복기 글: 허용 이메일만 생성 (목록은 authorizedUsers.json → npm run sync:firebase-rules)
     match /journal_posts/{postId} {
       allow read: if true;

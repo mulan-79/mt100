@@ -1,0 +1,61 @@
+/**
+ * Firestore `mountains_100_plus` 초기 시드용 (스키마는 mountainsSeed와 동일 권장)
+ * 실제 명단은 콘솔에서 수정·추가하면 됩니다.
+ */
+export const MOUNTAIN_100_PLUS_SEED_DATA = [
+  {
+    id: 'plus-gwanmobong',
+    name: '관모봉',
+    region: '강원',
+    status: 'pending',
+    difficulty: 3,
+    image: '',
+    weather: '',
+    duration: '',
+    gallery: [],
+  },
+  {
+    id: 'plus-birobong-sorak',
+    name: '비로봉',
+    region: '강원',
+    status: 'pending',
+    difficulty: 4,
+    image: '',
+    weather: '',
+    duration: '',
+    gallery: [],
+  },
+  {
+    id: 'plus-mangtaebong',
+    name: '망태봉',
+    region: '경기',
+    status: 'pending',
+    difficulty: 2,
+    image: '',
+    weather: '',
+    duration: '',
+    gallery: [],
+  },
+  {
+    id: 'plus-jeoksangsan',
+    name: '적상산',
+    region: '충청',
+    status: 'pending',
+    difficulty: 3,
+    image: '',
+    weather: '',
+    duration: '',
+    gallery: [],
+  },
+  {
+    id: 'plus-songnisan-bokju',
+    name: '속리산 복주봉',
+    region: '충청',
+    status: 'pending',
+    difficulty: 2,
+    image: '',
+    weather: '',
+    duration: '',
+    gallery: [],
+  },
+]

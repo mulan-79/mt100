@@ -12,6 +12,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 
 config({ path: resolve(root, '.env.firebase') })
+config({ path: resolve(root, '.env.local') })
+config({ path: resolve(root, '.env') })
 
 execSync('node scripts/sync-firebase-security-rules.mjs', {
   cwd: root,
@@ -27,3 +29,16 @@ execSync(
     env: process.env,
   },
 )
+
+// 서비스 계정 경로가 있으면 mountains_100_plus 비어 있을 때만 시드
+try {
+  execSync('node scripts/seed-mountains-100-plus-admin.mjs', {
+    cwd: root,
+    stdio: 'inherit',
+    env: process.env,
+  })
+} catch {
+  console.warn(
+    '[deploy] seed-mountains-100-plus-admin.mjs 실패(무시 가능). 서비스 계정·네트워크를 확인하세요.',
+  )
+}
