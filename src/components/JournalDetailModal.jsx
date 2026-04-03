@@ -6,9 +6,15 @@ import {
   CloudSun,
   Images,
   MapPin,
+  PencilLine,
   X,
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import { CommentThread } from './CommentThread'
+
+function normalizeEmail(str) {
+  return String(str ?? '').trim().toLowerCase()
+}
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -21,11 +27,12 @@ function formatDate(iso) {
 }
 
 /**
- * @param {{ mountain: object | null, onClose: () => void }} props
+ * @param {{ mountain: object | null, onClose: () => void, onEditRequest?: (m: object) => void }} props
  */
-export function JournalDetailModal({ mountain, onClose }) {
+export function JournalDetailModal({ mountain, onClose, onEditRequest }) {
   const titleId = useId()
   const closeRef = useRef(null)
+  const { user } = useAuth()
 
   useEffect(() => {
     if (!mountain) return
@@ -52,6 +59,12 @@ export function JournalDetailModal({ mountain, onClose }) {
   const commentParentId = mountain.id != null && mountain.id !== '' ? String(mountain.id) : ''
 
   const gallery = mountain.gallery ?? [{ src: mountain.image, alt: mountain.imageAlt ?? mountain.name }]
+
+  const canEditJournal =
+    mountain.isJournalPost &&
+    onEditRequest &&
+    user?.email &&
+    normalizeEmail(user.email) === normalizeEmail(mountain.userEmail)
 
   return (
     <div
@@ -93,26 +106,67 @@ export function JournalDetailModal({ mountain, onClose }) {
               <p className="mt-1 text-xs text-forest-500">작성: {mountain.userEmail}</p>
             ) : null}
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg p-2 text-forest-700 transition hover:bg-forest-100"
-            aria-label="닫기"
-          >
-            <X className="size-6" aria-hidden />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {canEditJournal ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onEditRequest(mountain)
+                  onClose()
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+              >
+                <PencilLine className="size-4" aria-hidden />
+                수정
+              </button>
+            ) : null}
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              className="shrink-0 rounded-lg p-2 text-forest-700 transition hover:bg-forest-100"
+              aria-label="닫기"
+            >
+              <X className="size-6" aria-hidden />
+            </button>
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-10 sm:px-6">
-          <div className="grid gap-4 sm:grid-cols-2">
+          {mountain.isJournalPost ? (
+            <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/40 p-4 shadow-sm ring-1 ring-emerald-100/80">
+              <div className="mb-2 flex items-center gap-2 text-emerald-900">
+                <Backpack className="size-5 shrink-0 text-emerald-700" aria-hidden />
+                <span className="text-sm font-semibold">당일 장비</span>
+              </div>
+              <p
+                className={`whitespace-pre-wrap text-sm leading-relaxed ${
+                  mountain.dayGear?.trim()
+                    ? 'text-forest-800/95'
+                    : 'text-forest-500 italic'
+                }`}
+              >
+                {mountain.dayGear?.trim()
+                  ? mountain.dayGear
+                  : '기록된 당일 장비가 없습니다.'}
+              </p>
+            </div>
+          ) : null}
+
+          <div
+            className={`grid gap-4 sm:grid-cols-2 ${
+              mountain.isJournalPost ? 'mt-4' : ''
+            }`}
+          >
             <div className="rounded-xl border border-forest-200 bg-white p-4 shadow-sm">
               <div className="mb-2 flex items-center gap-2 text-forest-600">
                 <CloudSun className="size-5 shrink-0" aria-hidden />
                 <span className="text-sm font-semibold">날씨·현장 메모</span>
               </div>
               <p className="text-sm leading-relaxed text-forest-800/95">
-                {mountain.weather}
+                {mountain.weather || (
+                  <span className="text-forest-400">—</span>
+                )}
               </p>
             </div>
             <div className="rounded-xl border border-forest-200 bg-white p-4 shadow-sm">
@@ -121,20 +175,11 @@ export function JournalDetailModal({ mountain, onClose }) {
                 <span className="text-sm font-semibold">소요 시간</span>
               </div>
               <p className="text-sm leading-relaxed text-forest-800/95">
-                {mountain.duration}
+                {mountain.duration || (
+                  <span className="text-forest-400">—</span>
+                )}
               </p>
             </div>
-            {mountain.isJournalPost && mountain.dayGear?.trim() ? (
-              <div className="rounded-xl border border-forest-200 bg-white p-4 shadow-sm sm:col-span-2">
-                <div className="mb-2 flex items-center gap-2 text-forest-600">
-                  <Backpack className="size-5 shrink-0" aria-hidden />
-                  <span className="text-sm font-semibold">당일 장비</span>
-                </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-forest-800/95">
-                  {mountain.dayGear}
-                </p>
-              </div>
-            ) : null}
           </div>
 
           {mountain.status === 'completed' && mountain.reflection ? (

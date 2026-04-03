@@ -48,7 +48,24 @@ service cloud.firestore {
         && request.resource.data.imageUrl.size() > 0
         && request.resource.data.dayGear is string
         && request.resource.data.dayGear.size() <= 3000;
-      allow update, delete: if false;
+      allow update: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in ['rainym002@gmail.com', 'jurio84@gmail.com', 'cspark80@gmail.com', 'kindpooh@gmail.com']
+        && request.auth.token.email.lower() == resource.data.userEmail.lower()
+        && request.resource.data.userEmail == resource.data.userEmail
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'content', 'date', 'dayGear', 'imageUrl'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 10000
+        && request.resource.data.date is string
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() > 0
+        && request.resource.data.dayGear is string
+        && request.resource.data.dayGear.size() <= 3000;
+      allow delete: if false;
 
     match /comments/{commentId} {
       allow read: if true;

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  Backpack,
   Calendar,
   History,
   LayoutGrid,
@@ -10,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { useMountains } from '../context/MountainsContext'
 import { JournalDetailModal } from './JournalDetailModal'
+import { JournalEditModal } from './JournalEditModal'
 import { JournalWriteModal } from './JournalWriteModal'
 import { MOUNTAIN_FILTER_REGIONS } from '../data/mountains'
 import {
@@ -109,6 +111,15 @@ function JournalCardContent({ m, variant }) {
             >
               {m.reflection}
             </p>
+            {m.isJournalPost && m.dayGear?.trim() ? (
+              <p className="flex min-w-0 items-start gap-1.5 text-xs leading-snug text-forest-700/90">
+                <Backpack
+                  className="mt-0.5 size-3.5 shrink-0 text-emerald-600"
+                  aria-hidden
+                />
+                <span className="line-clamp-2">{m.dayGear}</span>
+              </p>
+            ) : null}
           </>
         )}
         <span className="text-xs font-medium text-forest-500">
@@ -125,6 +136,7 @@ export function ReviewList() {
   const [query, setQuery] = useState('')
   const [regionId, setRegionId] = useState('all')
   const [detailMountain, setDetailMountain] = useState(null)
+  const [editMountain, setEditMountain] = useState(null)
   const [writeOpen, setWriteOpen] = useState(false)
   const [viewMode, setViewMode] = useState('grid')
   const [journalAuthorId, setJournalAuthorId] = useState('all')
@@ -161,6 +173,12 @@ export function ReviewList() {
       <JournalDetailModal
         mountain={detailMountain}
         onClose={() => setDetailMountain(null)}
+        onEditRequest={(m) => setEditMountain(m)}
+      />
+      <JournalEditModal
+        open={!!editMountain}
+        mountain={editMountain}
+        onClose={() => setEditMountain(null)}
       />
       <JournalWriteModal open={writeOpen} onClose={() => setWriteOpen(false)} />
 

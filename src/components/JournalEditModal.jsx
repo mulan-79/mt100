@@ -1,11 +1,19 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
-import { createJournalPost } from '../firebase/journalPostsFirestore'
+import { updateJournalPost } from '../firebase/journalPostsFirestore'
+
+function toDateInputValue(iso) {
+  const s = String(iso ?? '').trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString().slice(0, 10)
+}
 
 /**
- * @param {{ open: boolean, onClose: () => void }} props
+ * @param {{ open: boolean, mountain: object | null, onClose: () => void }} props
  */
-export function JournalWriteModal({ open, onClose }) {
+export function JournalEditModal({ open, mountain, onClose }) {
   const titleId = useId()
   const closeRef = useRef(null)
   const [title, setTitle] = useState('')
@@ -13,8 +21,29 @@ export function JournalWriteModal({ open, onClose }) {
   const [dayGear, setDayGear] = useState('')
   const [date, setDate] = useState('')
   const [imageFile, setImageFile] = useState(null)
+  const [blobPreviewUrl, setBlobPreviewUrl] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
+
+  useEffect(() => {
+    if (!imageFile) {
+      setBlobPreviewUrl(null)
+      return
+    }
+    const u = URL.createObjectURL(imageFile)
+    setBlobPreviewUrl(u)
+    return () => URL.revokeObjectURL(u)
+  }, [imageFile])
+
+  useEffect(() => {
+    if (!open || !mountain) return
+    setTitle(mountain.name ?? '')
+    setContent(mountain.reflection ?? '')
+    setDayGear(mountain.dayGear ?? '')
+    setDate(toDateInputValue(mountain.date))
+    setImageFile(null)
+    setFormError(null)
+  }, [open, mountain])
 
   useEffect(() => {
     if (!open) return
@@ -37,24 +66,26 @@ export function JournalWriteModal({ open, onClose }) {
 
   useEffect(() => {
     if (!open) {
-      setTitle('')
-      setContent('')
-      setDayGear('')
-      setDate('')
-      setImageFile(null)
-      setFormError(null)
       setSubmitting(false)
     }
   }, [open])
 
-  if (!open) return null
+  if (!open || !mountain?.id) return null
+
+  const previewSrc = blobPreviewUrl || mountain.image || ''
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError(null)
     setSubmitting(true)
     try {
-      await createJournalPost({ title, content, date, dayGear, imageFile })
+      await updateJournalPost(mountain.id, {
+        title,
+        content,
+        date,
+        dayGear,
+        imageFile: imageFile ?? null,
+      })
       onClose()
     } catch (err) {
       setFormError(err?.message ?? String(err))
@@ -65,7 +96,7 @@ export function JournalWriteModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-end justify-center p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[115] flex items-end justify-center p-0 sm:items-center sm:p-4"
       role="presentation"
     >
       <button
@@ -87,7 +118,7 @@ export function JournalWriteModal({ open, onClose }) {
             id={titleId}
             className="text-lg font-bold tracking-tight text-forest-900"
           >
-            정복기 글쓰기
+            정복기 수정
           </h2>
           <button
             ref={closeRef}
@@ -116,33 +147,32 @@ export function JournalWriteModal({ open, onClose }) {
 
           <div>
             <label
-              htmlFor="journal-title"
+              htmlFor="journal-edit-title"
               className="mb-1.5 block text-sm font-medium text-forest-800"
             >
               산 이름
             </label>
             <input
-              id="journal-title"
+              id="journal-edit-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
               maxLength={120}
               disabled={submitting}
-              placeholder="예: 한라산"
               className="w-full rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-50"
             />
           </div>
 
           <div>
             <label
-              htmlFor="journal-date"
+              htmlFor="journal-edit-date"
               className="mb-1.5 block text-sm font-medium text-forest-800"
             >
               등산 날짜
             </label>
             <input
-              id="journal-date"
+              id="journal-edit-date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
@@ -154,39 +184,38 @@ export function JournalWriteModal({ open, onClose }) {
 
           <div>
             <label
-              htmlFor="journal-content"
+              htmlFor="journal-edit-content"
               className="mb-1.5 block text-sm font-medium text-forest-800"
             >
               소감
             </label>
             <textarea
-              id="journal-content"
+              id="journal-edit-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required
               rows={5}
               maxLength={8000}
               disabled={submitting}
-              placeholder="그날의 날씨, 코스, 기분을 남겨 보세요."
               className="w-full resize-y rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-50"
             />
           </div>
 
           <div>
             <label
-              htmlFor="journal-day-gear"
+              htmlFor="journal-edit-day-gear"
               className="mb-1.5 block text-sm font-medium text-forest-800"
             >
               당일 장비
             </label>
             <textarea
-              id="journal-day-gear"
+              id="journal-edit-day-gear"
               value={dayGear}
               onChange={(e) => setDayGear(e.target.value)}
               rows={3}
               maxLength={3000}
               disabled={submitting}
-              placeholder="예: 폴·접지스틱, 경량 패딩, 보온병 500ml, 각반…"
+              placeholder="예: 폴·접지스틱, 경량 패딩…"
               className="w-full resize-y rounded-xl border border-forest-200 bg-white px-3 py-2.5 text-sm text-forest-900 outline-none ring-forest-500/30 focus:border-forest-400 focus:ring-2 disabled:bg-forest-50"
             />
             <p className="mt-1 text-xs text-forest-500">
@@ -196,16 +225,24 @@ export function JournalWriteModal({ open, onClose }) {
 
           <div>
             <label
-              htmlFor="journal-image"
+              htmlFor="journal-edit-image"
               className="mb-1.5 block text-sm font-medium text-forest-800"
             >
-              사진
+              사진 (바꾸려면 새 파일 선택)
             </label>
+            {previewSrc ? (
+              <div className="mb-2 overflow-hidden rounded-xl border border-forest-200 bg-forest-100">
+                <img
+                  src={previewSrc}
+                  alt=""
+                  className="max-h-40 w-full object-cover object-center"
+                />
+              </div>
+            ) : null}
             <input
-              id="journal-image"
+              id="journal-edit-image"
               type="file"
               accept="image/*"
-              required
               disabled={submitting}
               onChange={(e) => {
                 const f = e.target.files?.[0]
@@ -235,7 +272,7 @@ export function JournalWriteModal({ open, onClose }) {
                   저장 중…
                 </>
               ) : (
-                '저장'
+                '수정 저장'
               )}
             </button>
           </div>
